@@ -1,92 +1,866 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Atelier Admin | REMAGSTYLE</title>
+    <title>REMAGSTYLE</title>
+    <link rel="icon" type="image/png" href="image/Logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { theme: { extend: { colors: { ink: '#161616', paper: '#F7F6F2', line: '#DDD9D0', clay: '#B86F52', moss: '#4F6656' }, fontFamily: { serif: ['Georgia', 'serif'], sans: ['Arial', 'sans-serif'] } } } };
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#F9F8F6',
+                            card: '#EFECE6',
+                            text: '#111111',
+                            muted: '#666666',
+                            border: '#E2DFD8',
+                            darkBg: '#1A1A1A'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Cormorant Garamond', 'Playfair Display', 'Georgia', 'serif'],
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
+                    }
+                }
+            }
+        }
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F9F8F6;
+            color: #111111;
+            -webkit-font-smoothing: antialiased;
+        }
+        .font-serif { font-family: 'Cormorant Garamond', serif; }
+        ::-webkit-scrollbar { width: 5px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #F9F8F6; }
+        ::-webkit-scrollbar-thumb { background: #D1CDC6; border-radius: 9999px; }
+        .drawer-overlay { transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        .drawer-content { transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes hero-image-drift {
+            from { transform: scale(1.02) translate3d(0, 0, 0); }
+            to { transform: scale(1.07) translate3d(-1%, -0.5%, 0); }
+        }
+        @keyframes soft-rise {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes gallery-rise {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes footer-fade {
+            from { opacity: 0; transform: translateY(14px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hero-image-motion { animation: hero-image-drift 13.5s ease-in-out infinite alternate; }
+        .hero-copy-motion { animation: soft-rise 0.9s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .hero-copy-motion h1, .hero-copy-motion p { color: #111111; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.45); }
+        .hero-slider { min-height: 290px; position: relative; }
+        @media (min-width: 640px) {
+            .hero-slider { min-height: 320px; }
+        }
+        .hero-slide { inset: 56px 0 0; position: absolute; transition: opacity 0.8s ease, transform 0.8s ease; }
+        .hero-slide-hidden { opacity: 0; pointer-events: none; transform: translateY(12px); }
+        .hero-typing-line { border-right: 2px solid currentColor; display: block; overflow: hidden; white-space: nowrap; width: 0; }
+        .hero-typing-first { animation: typing-line 1.8s steps(13, end) forwards, typing-caret 0.8s 0.8s step-end infinite; }
+        .hero-typing-second { animation: typing-line 1.2s 2.8s steps(7, end) forwards, typing-caret 0.8s 3.6s step-end infinite; }
+        @keyframes typing-line { from { width: 0; } to { width: 100%; } }
+        @keyframes typing-caret { 50% { border-color: transparent; } }
+        #gallery-grid > div { animation: gallery-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        #gallery-grid > div:nth-child(2) { animation-delay: 0.12s; }
+        #gallery-grid > div:nth-child(3) { animation-delay: 0.24s; }
+        #gallery-grid > div:nth-child(4) { animation-delay: 0.36s; }
+        #gallery-grid > div:nth-child(5) { animation-delay: 0.48s; }
+        #gallery-grid > div:nth-child(6) { animation-delay: 0.6s; }
+        #footer > div { animation: footer-fade 1.1s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        @media (prefers-reduced-motion: reduce) {
+            .hero-image-motion, .hero-copy-motion, #gallery-grid > div, #footer > div { animation: none; }
+            .hero-slide, .hero-slide-hidden { transition: none; transform: none; }
+            .hero-typing-line { animation: none; border-color: transparent; width: auto; }
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-paper text-ink">
-    <div id="login-view" class="flex min-h-screen items-center justify-center px-5 py-12">
-        <form id="login-form" class="w-full max-w-md border border-line bg-white p-8 shadow-sm">
-            <p class="text-[10px] uppercase tracking-[0.24em] text-stone-500">REMAGSTYLE</p>
-            <h1 class="mt-3 font-serif text-5xl font-light">Atelier admin</h1>
-            <p class="mt-4 text-xs leading-6 text-stone-500">Sign in with the approved Firebase administrator account.</p>
-            <div class="mt-8 space-y-3">
-                <input id="login-email" type="email" required autocomplete="username" placeholder="Admin email" class="w-full border border-line bg-paper px-4 py-3 text-xs outline-none focus:border-ink">
-                <input id="login-password" type="password" required autocomplete="current-password" placeholder="Password" class="w-full border border-line bg-paper px-4 py-3 text-xs outline-none focus:border-ink">
-                <button class="w-full bg-ink py-3.5 text-[10px] uppercase tracking-[0.2em] text-white hover:bg-black/80">Enter workspace</button>
+<body class="bg-brand-bg text-brand-text flex flex-col min-h-screen selection:bg-brand-text selection:text-white">
+
+    <!-- Header & Navigation -->
+    <header class="sticky top-0 z-40 bg-brand-bg border-b border-brand-border/60">
+        <div class="bg-brand-text text-white text-[10px] md:text-[11px] uppercase tracking-widest py-2 px-4 flex justify-between items-center text-center">
+            <div class="hidden lg:block w-1/4"></div>
+            <p class="flex-1 font-light tracking-[0.15em] text-gray-200 truncate">
+                Bespoke Couture & Tailoring Atelier
+            </p>
+            <div class="hidden lg:flex justify-end items-center gap-1 w-1/4 text-[10px] text-gray-300">
+                <span>Location:</span>
+                <button class="hover:text-white flex items-center gap-1 font-medium transition-colors">Ghana</button>
             </div>
-            <p id="login-message" class="mt-4 hidden border border-red-200 bg-red-50 p-3 text-[11px] text-red-700"></p>
-            <a href="../index.html" class="mt-7 block text-[10px] uppercase tracking-[0.18em] text-stone-500 hover:text-ink">Back to site</a>
-        </form>
+        </div>
+
+        <nav class="bg-brand-bg/95 backdrop-blur-md border-b border-brand-border/40 px-4 md:px-8 lg:px-12 py-3.5 md:py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3 md:hidden">
+                <button id="mobile-menu-btn" class="p-1.5 text-brand-text focus:outline-none" aria-label="Toggle Navigation">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+                    </svg>
+                </button>
+            </div>
+
+            <a href="#" aria-label="REMAGSTYLE home" class="relative h-12 w-12 sm:h-14 sm:w-14 shrink-0">
+                <img src="image/Logo.png" alt="REMAGSTYLE" fetchpriority="high" decoding="async" class="absolute left-1/2 top-1/2 z-10 h-32 w-32 -translate-x-1/2 -translate-y-1/2 scale-[1.69] object-contain sm:h-36 sm:w-36" />
+            </a>
+
+            <div class="hidden md:flex items-center space-x-6 lg:space-x-8 text-[11px] lg:text-[12px] font-medium tracking-[0.18em] uppercase text-brand-text">
+                <a href="#gallery-section" class="hover:opacity-50 transition-opacity">GALLERY</a>
+                <a href="track-order.html" class="hover:opacity-50 transition-opacity">TRACK ORDER</a>
+                <a href="#footer" class="hover:opacity-50 transition-opacity">CONTACT</a>
+            </div>
+
+            <div class="flex items-center space-x-3 sm:space-x-4 text-brand-text">
+                <button id="open-account-btn" class="p-1.5 hover:opacity-60 transition-opacity flex items-center gap-1.5 group" aria-label="Account">
+                    <svg class="w-5 h-5 text-brand-text transition-transform group-hover:scale-105" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/>
+                    </svg>
+                    <span id="nav-user-status" class="hidden lg:inline text-[10px] tracking-[0.15em] uppercase font-medium">Sign In / Sign Up</span>
+                </button>
+            </div>
+        </nav>
+
+        <div id="mobile-menu" class="hidden md:hidden border-b border-brand-border/40 bg-brand-bg px-5 py-4">
+            <div class="flex flex-col gap-4 text-[11px] font-medium tracking-[0.18em] uppercase">
+                <a href="#gallery-section" class="mobile-menu-link hover:opacity-50 transition-opacity">Gallery</a>
+                <a href="track-order.html" class="mobile-menu-link hover:opacity-50 transition-opacity">Track Order</a>
+                <a href="#footer" class="mobile-menu-link hover:opacity-50 transition-opacity">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1">
+        <!-- Hero Section -->
+        <section class="relative w-full min-h-[460px] sm:min-h-[540px] md:min-h-[620px] lg:h-[calc(100vh-100px)] flex items-center bg-[#D6D2CA] overflow-hidden">
+            <div class="absolute inset-0 z-0">
+                <img 
+                            src="image/hero.jpg" 
+                            fetchpriority="high"
+                            decoding="async"
+                    alt="REMAGSTYLE Luxury Collection" 
+                    class="hero-image-motion w-full h-full object-cover object-top filter brightness-[0.97]"
+                />
+                <div class="absolute inset-0 bg-gradient-to-r from-brand-bg/55 via-brand-bg/30 to-transparent"></div>
+            </div>
+
+            <div class="relative z-10 max-w-7xl mx-auto px-5 sm:px-10 lg:px-16 w-full py-10 md:py-0">
+                <div class="hero-copy-motion max-w-xs sm:max-w-lg lg:max-w-xl">
+                    <div id="hero-slider" class="hero-slider">
+                        <div id="hero-slide-custom" class="hero-slide">
+                            <h1 class="font-serif text-2xl font-semibold leading-[1.15] text-brand-text sm:text-4xl lg:text-5xl"><span class="hero-typing-line hero-typing-first">NEED A CUSTOM</span><span class="hero-typing-line hero-typing-second">TAYLOR ?</span></h1>
+                        </div>
+                        <div id="hero-slide-current" class="hero-slide hero-slide-hidden">
+                            <p class="text-[10px] sm:text-xs tracking-[0.25em] uppercase font-light text-brand-text/80">ACCRA / GHANA</p>
+                            <h1 class="mt-3 font-serif text-3xl sm:text-5xl lg:text-6xl font-light leading-[1.15] text-brand-text">Your Style.<br/>Your Story.</h1>
+                            <p class="mt-3 text-xs sm:text-base font-light text-brand-text/80 max-w-sm">
+                                REMAGSTYLE is an Accra-based luxury couture house specializing in bespoke African fashion, modern Kente garments, and custom tailored designs.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="client-dashboard.html" id="order-now-btn" class="inline-flex items-center justify-center bg-brand-text px-6 py-3 text-[10px] font-medium tracking-[0.2em] uppercase text-white transition-colors hover:bg-black/80">
+                            Order Now
+                        </a>
+                        <a href="appointment.html" class="inline-flex items-center justify-center border-2 border-brand-text bg-white/60 px-6 py-3 text-[10px] font-bold tracking-[0.2em] uppercase text-black shadow-[0_4px_12px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-all hover:bg-brand-text hover:text-white hover:shadow-[0_6px_16px_rgba(0,0,0,0.4)]">
+                            Book an Appointment
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Gallery Section -->
+        <section id="gallery-section" class="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-10 sm:py-16 md:py-20">
+            <div class="text-center max-w-2xl mx-auto mb-10 sm:mb-14 space-y-2">
+                <span class="text-[10px] sm:text-xs tracking-[0.25em] uppercase font-light text-brand-muted">Atelier Archive</span>
+                <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-light text-brand-text">Live Gallery</h2>
+                <p class="text-xs sm:text-sm font-light text-brand-muted">
+                    Explore curated designs from our bespoke tailoring collection.
+                </p>
+            </div>
+
+            <!-- Gallery Cards Grid -->
+            <div id="gallery-grid" class="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-3 justify-items-center">
+                
+                <!-- NEW Gallery Card: ImgPile Image -->
+                <div class="w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
+                    <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
+                            <div>
+                                <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
+                                <p class="text-[9px] text-brand-muted tracking-tight">Atelier Collection</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
+                        <img 
+                            src="image/1.jpg" 
+                            loading="lazy"
+                            decoding="async"
+                            alt="REMAGSTYLE Atelier Creation" 
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            onerror="this.src=''"
+                        />
+                    </div>
+
+                    <div class="p-4 bg-white border-t border-brand-border/40">
+                        <p class="text-[11px] text-brand-text font-medium tracking-wide">Signature Couture Design</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Card 1 -->
+                <div class="w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
+                    <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
+                            <div>
+                                <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
+                                <p class="text-[9px] text-brand-muted tracking-tight">Atelier Feature</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
+                        <img 
+                            src="image/2.jpg" 
+                            loading="lazy"
+                            decoding="async"
+                            alt="REMAGSTYLE Custom Suit" 
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            
+                        />
+                    </div>
+
+                    <div class="p-4 bg-white border-t border-brand-border/40">
+                        <p class="text-[11px] text-brand-text font-medium tracking-wide">Custom Bespoke Tailoring</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Card 2 -->
+                <div class="w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
+                    <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
+                            <div>
+                                <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
+                                <p class="text-[9px] text-brand-muted tracking-tight">Atelier Feature</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
+                        <img
+                            src="image/3.jpg"
+                            loading="lazy"
+                            decoding="async"
+                            alt="REMAGSTYLE Contemporary Design"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                    </div>
+
+                    <div class="p-4 bg-white border-t border-brand-border/40">
+                        <p class="text-[11px] text-brand-text font-medium tracking-wide">Contemporary Couture</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Card 3 -->
+                <div class="w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
+                    <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
+                            <div>
+                                <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
+                                <p class="text-[9px] text-brand-muted tracking-tight">Atelier Feature</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
+                        <img
+                            src="image/4.jpg"
+                            loading="lazy"
+                            decoding="async"
+                            alt="REMAGSTYLE Signature Look"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                    </div>
+
+                    <div class="p-4 bg-white border-t border-brand-border/40">
+                        <p class="text-[11px] text-brand-text font-medium tracking-wide">Signature  Look</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Card 4 -->
+                <div class="w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
+                    <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
+                            <div>
+                                <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
+                                <p class="text-[9px] text-brand-muted tracking-tight">Atelier Feature</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
+                        <img
+                            src="image/5.jpg"
+                            loading="lazy"
+                            decoding="async"
+                            alt="REMAGSTYLE Bespoke Creation"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                    </div>
+
+                    <div class="p-4 bg-white border-t border-brand-border/40">
+                        <p class="text-[11px] text-brand-text font-medium tracking-wide">Bespoke Atelier Look</p>
+                    </div>
+                </div>
+
+                <!-- Gallery Card 5 -->
+                <div class="w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
+                    <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
+                            <div>
+                                <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
+                                <p class="text-[9px] text-brand-muted tracking-tight">Atelier Feature</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
+                        <img
+                            src="image/6.jpg"
+                            loading="lazy"
+                            decoding="async"
+                            alt="REMAGSTYLE Evening Design"
+                            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                    </div>
+
+                    <div class="p-4 bg-white border-t border-brand-border/40">
+                        <p class="text-[11px] text-brand-text font-medium tracking-wide">Modern Evening Couture</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mt-10 text-center">
+                <a href="https://www.instagram.com/remagstyle/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center border border-brand-text px-6 py-3 text-[10px] font-medium tracking-[0.2em] uppercase text-brand-text transition-colors hover:bg-brand-text hover:text-white">
+                    View More on Instagram
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer id="footer" class="bg-brand-text text-white">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 py-12 sm:py-16">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
+                <div class="sm:col-span-2 lg:col-span-1">
+                    <a href="#" aria-label="REMAGSTYLE home" class="inline-flex items-center">
+                        <img src="image/Logo.png" alt="REMAGSTYLE" loading="lazy" decoding="async" class="h-28 w-28 object-contain" />
+                    </a>
+                    <p class="mt-4 max-w-xs text-xs leading-6 text-gray-400">
+                        Bespoke African fashion and modern couture, crafted in Accra for stories worth wearing.
+                    </p>
+                    <a href="mailto:hello@remagstyle.com" class="inline-block mt-5 text-[10px] tracking-[0.15em] uppercase text-white hover:text-gray-400 transition-colors">
+                        hello@remagstyle.com
+                    </a>
+                </div>
+
+                <div>
+                    <h3 class="text-[10px] tracking-[0.2em] uppercase text-gray-400">Contact</h3>
+                    <div class="mt-4 space-y-3 text-xs leading-5 text-gray-200">
+                        <a href="tel:+233547850142" class="block hover:text-gray-400 transition-colors">+233 (0) 547 850 142</a>
+                        <p>Nii Kwatei Apuano Ave, Accra, Ghana</p>
+                        <a href="https://www.google.com/maps/search/?api=1&query=5%C2%B032%2720.3%22N+0%C2%B019%2755.7%22W" target="_blank" rel="noopener noreferrer" class="block hover:text-gray-400 transition-colors">5°32'20.3"N 0°19'55.7"W</a>
+                        <p>Mon - Sat, 9:00 - 18:00</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-[10px] tracking-[0.2em] uppercase text-gray-400">Follow Us</h3>
+                    <div class="mt-4 flex flex-col items-start gap-3 text-xs text-gray-200">
+                        <a href="https://www.instagram.com/remagstyle/" target="_blank" rel="noopener noreferrer" class="hover:text-gray-400 transition-colors">Instagram</a>
+                        <a href="https://www.facebook.com/remagstyle/" target="_blank" rel="noopener noreferrer" class="hover:text-gray-400 transition-colors">Facebook</a>
+                        <a href="https://wa.me/233547850142" target="_blank" rel="noopener noreferrer" class="hover:text-gray-400 transition-colors">WhatsApp</a>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-[10px] tracking-[0.2em] uppercase text-gray-400">Client Care</h3>
+                    <div class="mt-4 flex flex-col items-start gap-3 text-xs text-gray-200">
+                        <a href="#gallery-section" class="hover:text-gray-400 transition-colors">Explore Gallery</a>
+                        <a href="appointment.html" class="hover:text-gray-400 transition-colors">Book an Appointment</a>
+                        <a href="mailto:hello@remagstyle.com?subject=Remagstyle%20Enquiry" class="hover:text-gray-400 transition-colors">General Enquiries</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-12 pt-5 border-t border-white/15 flex flex-col sm:flex-row justify-between gap-3 text-[10px] text-gray-500">
+                <p>© 2026 REMAGSTYLE. All rights reserved.</p>
+                <p>Designed and tailored in Accra, Ghana.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="auth-success-toast" class="hidden fixed right-5 top-5 z-[60] max-w-xs border border-green-200 bg-green-50 px-4 py-3 text-[11px] text-green-800 shadow-lg" role="status" aria-live="polite"></div>
+
+    <!-- Firebase Auth Drawer -->
+    <div id="account-drawer" class="fixed inset-0 z-50 pointer-events-none">
+        <div id="account-overlay" class="drawer-overlay absolute inset-0 bg-black/40 opacity-0 pointer-events-none"></div>
+        
+        <div id="account-panel" class="drawer-content absolute top-0 right-0 h-full w-full max-w-2xl bg-brand-bg shadow-2xl transform translate-x-full pointer-events-auto flex flex-col overflow-y-auto">
+            <div class="p-5 border-b border-brand-border flex items-center justify-between bg-brand-bg sticky top-0 z-10">
+                <h3 id="account-drawer-title" class="font-serif text-lg tracking-wide uppercase">Client Portal</h3>
+                <button id="close-account-btn" class="p-2 hover:opacity-60">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div id="auth-error-msg" class="hidden mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-700 text-[11px]"></div>
+
+            <div id="auth-forms-container" class="p-6 flex-1 flex flex-col justify-between">
+                <div>
+                    <div class="flex border-b border-brand-border mb-6">
+                        <button id="tab-signin-btn" class="flex-1 pb-3 text-xs tracking-[0.2em] uppercase font-medium border-b-2 border-brand-text text-brand-text">Sign In</button>
+                        <button id="tab-signup-btn" class="flex-1 pb-3 text-xs tracking-[0.2em] uppercase font-medium border-b-2 border-transparent text-brand-muted">Create Account</button>
+                    </div>
+
+                    <form id="signin-form" class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Email</label>
+                            <input type="email" id="signin-email" required placeholder="name@example.com" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Password</label>
+                            <input type="password" id="signin-password" required placeholder="••••••••" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
+                        </div>
+                        <button type="submit" class="w-full mt-4 py-3 bg-brand-text text-white text-[10px] font-medium tracking-[0.2em] uppercase hover:bg-black/80">Sign In</button>
+                        <a href="guest-order.html" class="mt-5 block border border-brand-text px-4 py-3 text-center text-[10px] font-medium tracking-[0.2em] uppercase text-brand-text transition-colors hover:bg-brand-text hover:text-white">Order as a Guest</a>
+                    </form>
+
+                    <form id="signup-form" class="space-y-4 hidden">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">First Name</label>
+                                <input type="text" id="signup-fname" required placeholder="Julian" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
+                            </div>
+                            <div>
+                                <label class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Last Name</label>
+                                <input type="text" id="signup-lname" required placeholder="Vane" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Email</label>
+                            <input type="email" id="signup-email" required placeholder="name@example.com" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Password</label>
+                            <input type="password" id="signup-password" required placeholder="At least 6 characters" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
+                        </div>
+                        <button type="submit" class="w-full mt-4 py-3 bg-brand-text text-white text-[10px] font-medium tracking-[0.2em] uppercase hover:bg-black/80">Create Account</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="user-dashboard-container" class="p-6 flex-1 flex flex-col justify-between hidden">
+                <div class="bg-[#F3F0EA] p-5 border border-brand-border space-y-1">
+                    <span class="text-[9px] tracking-[0.25em] uppercase text-brand-muted font-medium">Authenticated Member</span>
+                    <h4 id="user-display-name" class="font-serif text-xl text-brand-text">Welcome</h4>
+                    <p id="user-display-email" class="text-[11px] font-light text-brand-muted">email@domain.com</p>
+                </div>
+
+                <div class="mt-6">
+                            <div class="flex items-end justify-between gap-4 mb-4">
+                        <div>
+                            <span class="text-[9px] tracking-[0.25em] uppercase text-brand-muted font-medium">Bespoke Orders</span>
+                            <h4 class="font-serif text-2xl text-brand-text">Create an order</h4>
+                        </div>
+                        <span class="text-[10px] text-brand-muted">Private client dashboard</span>
+                    </div>
+
+                    <form id="order-form" class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label for="order-garment" class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Garment</label>
+                                <select id="order-garment" required class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text">
+                                    <option value="">Select a garment</option>
+                                    <option>Custom Suit</option>
+                                    <option>Kente Ensemble</option>
+                                    <option>Evening Wear</option>
+                                    <option>Bridal Couture</option>
+                                    <option>Other Bespoke Design</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="order-occasion" class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Occasion</label>
+                                <input type="text" id="order-occasion" required placeholder="Wedding, gala, ceremony" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="order-notes" class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Design brief</label>
+                            <textarea id="order-notes" required rows="3" placeholder="Tell us about the silhouette, fabric, colors, and finish you have in mind." class="w-full resize-y bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text"></textarea>
+                        </div>
+
+                        <div>
+                            <p class="block text-[10px] tracking-[0.2em] uppercase mb-2 text-brand-muted">Measurements (cm)</p>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <input type="number" min="1" step="0.1" id="measurement-chest" required placeholder="Chest" aria-label="Chest measurement" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
+                                <input type="number" min="1" step="0.1" id="measurement-waist" required placeholder="Waist" aria-label="Waist measurement" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
+                                <input type="number" min="1" step="0.1" id="measurement-shoulder" required placeholder="Shoulder" aria-label="Shoulder measurement" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
+                                <input type="number" min="1" step="0.1" id="measurement-length" required placeholder="Length" aria-label="Garment length measurement" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="order-inspiration" class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Inspiration links</label>
+                            <textarea id="order-inspiration" rows="2" placeholder="Paste Instagram, Pinterest, or image links (one per line)." class="w-full resize-y bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text"></textarea>
+                        </div>
+
+                        <button type="submit" class="w-full py-3 bg-brand-text text-white text-[10px] font-medium tracking-[0.2em] uppercase hover:bg-black/80">Place Order Request</button>
+                    </form>
+                    <p id="order-form-message" class="hidden mt-3 p-3 text-[11px]"></p>
+                </div>
+
+                <div class="mt-8">
+                    <div class="flex items-end justify-between gap-4 mb-4">
+                        <div>
+                            <span class="text-[9px] tracking-[0.25em] uppercase text-brand-muted font-medium">Order Tracking</span>
+                            <h4 class="font-serif text-2xl text-brand-text">Your orders</h4>
+                        </div>
+                        <span id="orders-loading" class="text-[10px] text-brand-muted">Loading...</span>
+                    </div>
+                    <div id="orders-list" class="space-y-3">
+                        <p class="border border-dashed border-brand-border p-4 text-xs text-brand-muted">Your order history will appear here.</p>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-brand-border">
+                    <button id="signout-btn" class="w-full py-3 border border-brand-text text-brand-text text-[10px] tracking-[0.2em] uppercase hover:bg-brand-text hover:text-white">Sign Out</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="admin-view" class="hidden min-h-screen lg:grid lg:grid-cols-[230px_minmax(0,1fr)]">
-        <aside class="border-r border-line bg-[#ECE9E2] p-5 lg:flex lg:min-h-screen lg:flex-col">
-            <div><p class="text-[10px] uppercase tracking-[0.2em]">REMAGSTYLE</p><p class="mt-1 text-[9px] uppercase tracking-[0.16em] text-stone-500">Atelier admin</p></div>
-            <nav class="mt-12 space-y-2">
-                <button data-view="orders" class="nav-button active flex w-full items-center justify-between px-3 py-3 text-left text-[10px] uppercase tracking-[0.16em]"><span>Orders</span><span id="order-count">0</span></button>
-                <button data-view="appointments" class="nav-button flex w-full items-center justify-between px-3 py-3 text-left text-[10px] uppercase tracking-[0.16em] hover:bg-white"><span>Appointments</span><span id="appointment-count">0</span></button>
-                <button data-view="account" class="nav-button flex w-full items-center justify-between px-3 py-3 text-left text-[10px] uppercase tracking-[0.16em] hover:bg-white"><span>Account</span><span id="account-count">0</span></button>
-            </nav>
-            <div class="mt-auto pt-10"><p id="admin-email" class="break-all text-[9px] text-stone-500"></p><button id="signout" class="mt-4 text-left text-[10px] uppercase tracking-[0.16em] text-stone-500 hover:text-ink">Sign out</button></div>
-        </aside>
-
-        <main class="min-w-0 p-5 sm:p-8 lg:p-12">
-            <header class="flex flex-col justify-between gap-5 border-b border-line pb-7 sm:flex-row sm:items-end"><div><p class="text-[10px] uppercase tracking-[0.24em] text-stone-500">Private client operations</p><h1 class="mt-2 font-serif text-5xl font-light">The workroom</h1></div><p class="text-[10px] uppercase tracking-[0.16em] text-moss">Admin access verified</p></header>
-            <section class="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4"><div class="border border-line bg-white p-4"><p class="text-[9px] uppercase tracking-[0.16em] text-stone-500">Orders</p><p id="stat-orders" class="mt-2 font-serif text-3xl">0</p></div><div class="border border-line bg-white p-4"><p class="text-[9px] uppercase tracking-[0.16em] text-stone-500">New orders</p><p id="stat-new-orders" class="mt-2 font-serif text-3xl text-clay">0</p></div><div class="border border-line bg-white p-4"><p class="text-[9px] uppercase tracking-[0.16em] text-stone-500">Appointments</p><p id="stat-appointments" class="mt-2 font-serif text-3xl">0</p></div><div class="border border-line bg-white p-4"><p class="text-[9px] uppercase tracking-[0.16em] text-stone-500">New requests</p><p id="stat-new-appointments" class="mt-2 font-serif text-3xl text-clay">0</p></div></section>
-
-            <section id="orders-view" class="mt-10"><div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p class="text-[10px] uppercase tracking-[0.22em] text-stone-500">Incoming work</p><h2 class="mt-1 font-serif text-3xl font-light">All orders</h2></div><div class="flex flex-wrap gap-2"><input id="order-search" type="search" placeholder="Search client or order" class="w-full border border-line bg-white px-3 py-2.5 text-xs outline-none focus:border-ink sm:w-56"><select id="order-filter" class="border border-line bg-white px-3 py-2.5 text-xs outline-none"><option>All</option><option>Received</option><option>Reviewing</option><option>In progress</option><option>Ready</option><option>Delivered</option><option>Cancelled</option></select></div></div><div id="orders-list" class="mt-5 grid gap-3 xl:grid-cols-2"></div></section>
-            <section id="appointments-view" class="mt-10 hidden"><div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p class="text-[10px] uppercase tracking-[0.22em] text-stone-500">Calendar requests</p><h2 class="mt-1 font-serif text-3xl font-light">Appointments</h2></div><select id="appointment-filter" class="border border-line bg-white px-3 py-2.5 text-xs outline-none"><option>All</option><option>New</option><option>Contacted</option><option>Confirmed</option><option>Completed</option><option>Declined</option></select></div><div id="appointments-list" class="mt-5 grid gap-3 xl:grid-cols-2"></div></section>
-            <section id="account-view" class="mt-10 hidden"><div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p class="text-[10px] uppercase tracking-[0.22em] text-stone-500">Client billing</p><h2 class="mt-1 font-serif text-3xl font-light">Invoices & receipts</h2><p class="mt-2 max-w-xl text-xs leading-5 text-stone-500">Create a document, then copy its secure client link to send it through your website.</p></div></div><form id="account-form" class="mt-6 border border-line bg-white p-5 sm:p-7"><div class="grid gap-4 sm:grid-cols-2"><label class="text-[10px] uppercase tracking-[0.16em] text-stone-500">Document type<select id="account-type" class="mt-2 w-full border border-line bg-paper px-3 py-3 text-xs"><option value="Invoice">Invoice</option><option value="Payment Receipt">Payment Receipt</option></select></label><label class="text-[10px] uppercase tracking-[0.16em] text-stone-500">Client name<input id="account-client-name" required class="mt-2 w-full border border-line bg-paper px-3 py-3 text-xs"></label><label class="text-[10px] uppercase tracking-[0.16em] text-stone-500">Client email<input id="account-client-email" type="email" required class="mt-2 w-full border border-line bg-paper px-3 py-3 text-xs"></label><label class="text-[10px] uppercase tracking-[0.16em] text-stone-500">Order number<input id="account-order-number" placeholder="RS-2026-XXXXXXXX" class="mt-2 w-full border border-line bg-paper px-3 py-3 text-xs uppercase"></label><label class="text-[10px] uppercase tracking-[0.16em] text-stone-500 sm:col-span-2">Line items <span class="normal-case tracking-normal text-stone-400">one per line: Description | Amount</span><textarea id="account-items" required rows="4" placeholder="Bespoke suit | 150000&#10;Delivery | 5000" class="mt-2 w-full border border-line bg-paper px-3 py-3 text-xs"></textarea></label><label class="text-[10px] uppercase tracking-[0.16em] text-stone-500">Currency<input id="account-currency" value="NGN" maxlength="3" class="mt-2 w-full border border-line bg-paper px-3 py-3 text-xs uppercase"></label><label class="text-[10px] uppercase tracking-[0.16em] text-stone-500">Notes<textarea id="account-notes" rows="2" class="mt-2 w-full border border-line bg-paper px-3 py-3 text-xs"></textarea></label></div><button class="mt-5 bg-ink px-5 py-3 text-[10px] uppercase tracking-[0.2em] text-white hover:bg-black/80">Create document</button></form><div id="accounts-list" class="mt-6 grid gap-3 xl:grid-cols-2"></div></section>
-        </main>
-    </div>
-
-    <div id="drawer" class="pointer-events-none fixed inset-0 z-20 flex justify-end bg-black/20 opacity-0 transition-opacity"><div id="drawer-panel" class="h-full w-full max-w-xl translate-x-full overflow-y-auto bg-white p-6 transition-transform sm:p-9"><div class="flex items-start justify-between"><div><p id="drawer-kicker" class="text-[10px] uppercase tracking-[0.2em] text-stone-500"></p><h2 id="drawer-title" class="mt-2 font-serif text-4xl font-light"></h2></div><button id="close-drawer" class="p-2 text-2xl text-stone-500">&times;</button></div><div id="drawer-content" class="mt-8"></div><button id="delete-order" type="button" class="mt-8 hidden w-full border border-red-300 py-3.5 text-[10px] uppercase tracking-[0.2em] text-red-700 hover:bg-red-700 hover:text-white">Delete order</button><button id="delete-appointment" type="button" class="mt-8 hidden w-full border border-red-300 py-3.5 text-[10px] uppercase tracking-[0.2em] text-red-700 hover:bg-red-700 hover:text-white">Delete appointment</button></div></div>
-    <div id="toast" class="fixed bottom-5 right-5 z-30 hidden border border-ink bg-ink px-4 py-3 text-xs text-white"></div>
-
+    <!-- Firebase SDK -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
-        import { getFirestore, collection, onSnapshot, updateDoc, deleteDoc, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            signOut, 
+            onAuthStateChanged, 
+            updateProfile 
+        } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, addDoc, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { startInactivityLogout } from "./auth-inactivity.js";
 
-        const ADMIN_UID = '8VRjJBdsEfO8PLXGdrwjB4Xf1vz1';
-        const app = initializeApp({ apiKey: 'AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o', authDomain: 'remagstyle-43b41.firebaseapp.com', projectId: 'remagstyle-43b41', messagingSenderId: '145831201308', appId: '1:145831201308:web:489a014516356f73a72dd9' });
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o",
+            authDomain: "remagstyle-43b41.firebaseapp.com",
+            projectId: "remagstyle-43b41",
+            messagingSenderId: "145831201308",
+            appId: "1:145831201308:web:489a014516356f73a72dd9"
+        };
+
+        const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const state = { orders: [], appointments: [], accounts: [], type: '', record: null };
-        const $ = (id) => document.getElementById(id);
-        const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]);
-        const dateText = (value) => value?.toDate?.().toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) || 'Just submitted';
-        const sortNewest = (records) => records.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
 
-        function showToast(message) { $('toast').textContent = message; $('toast').classList.remove('hidden'); setTimeout(() => $('toast').classList.add('hidden'), 4500); }
-        function renderStats() { $('order-count').textContent = state.orders.length; $('appointment-count').textContent = state.appointments.length; $('stat-orders').textContent = state.orders.length; $('stat-new-orders').textContent = state.orders.filter((record) => record.status === 'Received').length; $('stat-appointments').textContent = state.appointments.length; $('stat-new-appointments').textContent = state.appointments.filter((record) => record.status === 'New').length; }
-        function money(value, currency) { return `${currency || 'NGN'} ${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; }
-        function accountLink(account) { return new URL('../account.html', window.location.href).href + `?token=${encodeURIComponent(account.accessToken)}`; }
-        function renderAccounts() { $('account-count').textContent = state.accounts.length; $('accounts-list').innerHTML = state.accounts.length ? state.accounts.map((account) => `<article class="border border-line bg-white p-5"><div class="flex items-start justify-between gap-3"><div><p class="text-[9px] uppercase tracking-[0.2em] text-stone-500">${escapeHtml(account.documentType)} / ${escapeHtml(account.documentNumber)}</p><h3 class="mt-2 font-serif text-2xl">${escapeHtml(account.clientName)}</h3><p class="mt-1 text-xs text-stone-500">${escapeHtml(account.clientEmail)}${account.orderNumber ? ` / ${escapeHtml(account.orderNumber)}` : ''}</p></div><span class="border border-line px-2 py-1 text-[9px] uppercase tracking-[0.14em]">${escapeHtml(money(account.total, account.currency))}</span></div><div class="mt-5 flex flex-wrap gap-2 border-t border-line pt-3"><button data-copy-account="${escapeHtml(account.id)}" class="border border-ink px-3 py-2 text-[10px] uppercase tracking-[0.15em] hover:bg-ink hover:text-white">Copy client link</button><a href="${escapeHtml(accountLink(account))}" target="_blank" rel="noopener" class="border border-line px-3 py-2 text-[10px] uppercase tracking-[0.15em] hover:border-ink">Open / download</a><button data-print-account="${escapeHtml(account.id)}" class="border border-line px-3 py-2 text-[10px] uppercase tracking-[0.15em] hover:border-ink">Print / PDF</button></div></article>`).join('') : '<p class="border border-dashed border-line p-6 text-xs text-stone-500">No invoices or receipts have been created.</p>'; }
-        async function createAccountDocument(event) { event.preventDefault(); const itemLines = $('account-items').value.split('\n').map((line) => line.trim()).filter(Boolean); const lineItems = itemLines.map((line) => { const [description, amount] = line.split('|').map((part) => part.trim()); return { description, amount: Number((amount || '').replace(/,/g, '')) }; }); if (!lineItems.length || lineItems.some((item) => !item.description || !Number.isFinite(item.amount) || item.amount < 0)) { showToast('Use one valid Description | Amount line per item.'); return; } const total = lineItems.reduce((sum, item) => sum + item.amount, 0); const button = $('account-form').querySelector('button'); button.disabled = true; button.textContent = 'Creating...'; try { const accessToken = crypto.randomUUID(); await setDoc(doc(db, 'accounts', accessToken), { documentType: $('account-type').value, documentNumber: `RS-${$('account-type').value === 'Invoice' ? 'INV' : 'RCT'}-${new Date().getFullYear()}-${accessToken.slice(0, 6).toUpperCase()}`, clientName: $('account-client-name').value.trim(), clientEmail: $('account-client-email').value.trim().toLowerCase(), orderNumber: $('account-order-number').value.trim().toUpperCase(), lineItems, total, currency: $('account-currency').value.trim().toUpperCase() || 'NGN', notes: $('account-notes').value.trim(), accessToken, createdAt: serverTimestamp(), createdBy: auth.currentUser?.uid || '', sentAt: null }); $('account-form').reset(); $('account-currency').value = 'NGN'; showToast('Document created. Copy the client link to send it.'); } catch (error) { showToast('Could not create document. Check Firestore rules.'); console.error(error); } finally { button.disabled = false; button.textContent = 'Create document'; } }
-        async function copyAccountLink(id) { const account = state.accounts.find((item) => item.id === id); if (!account) return; const link = accountLink(account); try { await navigator.clipboard.writeText(link); await updateDoc(doc(db, 'accounts', id), { sentAt: serverTimestamp() }); showToast('Client link copied. Send it to the client.'); } catch (error) { window.prompt('Copy this client link:', link); } }
-        function printAccount(id) { const account = state.accounts.find((item) => item.id === id); if (account) window.open(accountLink(account), '_blank', 'noopener'); }
-        function renderOrders() { const search = $('order-search').value.trim().toLowerCase(); const filter = $('order-filter').value; const records = state.orders.filter((order) => (filter === 'All' || order.status === filter) && `${order.customerName} ${order.customerEmail} ${order.orderNumber} ${order.garment}`.toLowerCase().includes(search)); $('orders-list').innerHTML = records.length ? records.map((order) => `<button data-order-id="${escapeHtml(order.id)}" class="border border-line bg-white p-5 text-left transition hover:border-ink"><div class="flex items-start justify-between gap-3"><div><p class="text-[9px] uppercase tracking-[0.2em] text-stone-500">${escapeHtml(order.orderNumber || 'Legacy order')}</p><h3 class="mt-2 font-serif text-2xl">${escapeHtml(order.customerName || 'Unnamed client')}</h3><p class="mt-1 text-xs text-stone-500">${escapeHtml(order.garment)} / ${escapeHtml(order.occasion)}</p></div><span class="border border-line px-2 py-1 text-[9px] uppercase tracking-[0.14em]">${escapeHtml(order.status || 'Received')}</span></div><div class="mt-5 flex justify-between border-t border-line pt-3 text-[10px] text-stone-500"><span>${escapeHtml(dateText(order.createdAt))}</span><span class="text-ink">View request &rarr;</span></div></button>`).join('') : '<p class="border border-dashed border-line p-6 text-xs text-stone-500">No orders match this view.</p>'; }
-        function renderAppointments() { const filter = $('appointment-filter').value; const records = state.appointments.filter((appointment) => filter === 'All' || appointment.status === filter); $('appointments-list').innerHTML = records.length ? records.map((appointment) => `<button data-appointment-id="${escapeHtml(appointment.id)}" class="border border-line bg-white p-5 text-left transition hover:border-ink"><div class="flex items-start justify-between gap-3"><div><p class="text-[9px] uppercase tracking-[0.2em] text-stone-500">${escapeHtml(appointment.service)}</p><h3 class="mt-2 font-serif text-2xl">${escapeHtml(appointment.customerName)}</h3><p class="mt-1 text-xs text-stone-500">${escapeHtml(appointment.preferredDate)} at ${escapeHtml(appointment.preferredTime)}</p></div><span class="border border-line px-2 py-1 text-[9px] uppercase tracking-[0.14em]">${escapeHtml(appointment.status || 'New')}</span></div><div class="mt-5 flex justify-between border-t border-line pt-3 text-[10px] text-stone-500"><span>${escapeHtml(dateText(appointment.createdAt))}</span><span class="text-ink">Open request &rarr;</span></div></button>`).join('') : '<p class="border border-dashed border-line p-6 text-xs text-stone-500">No appointments match this view.</p>'; }
-        function measurementMarkup(measurements) { const entries = Object.entries(measurements || {}); return entries.length ? `<div class="grid grid-cols-2 gap-2">${entries.map(([key, value]) => `<div class="border border-line bg-paper p-3"><p class="text-[9px] uppercase tracking-[0.12em] text-stone-500">${escapeHtml(key.replace(/([A-Z])/g, ' $1'))}</p><p class="mt-1 text-sm">${escapeHtml(value)} cm</p></div>`).join('')}</div>` : '<p class="text-xs text-stone-500">No measurements were submitted.</p>'; }
-        function openDrawer(type, id) { const record = state[type === 'order' ? 'orders' : 'appointments'].find((item) => item.id === id); if (!record) return; state.type = type; state.record = record; $('drawer-kicker').textContent = type === 'order' ? record.orderNumber || 'Order request' : 'Appointment request'; $('drawer-title').textContent = record.customerName || 'Client request'; $('drawer-content').innerHTML = type === 'order' ? `<div class="space-y-7"><div class="grid grid-cols-2 gap-4 border-y border-line py-4 text-xs"><p class="text-stone-500">Email<br><span class="text-ink">${escapeHtml(record.customerEmail || 'Not provided')}</span></p><p class="text-stone-500">Phone<br><span class="text-ink">${escapeHtml(record.customerPhone || 'Not provided')}</span></p><p class="text-stone-500">Garment<br><span class="text-ink">${escapeHtml(record.garment)}</span></p><p class="text-stone-500">Submitted<br><span class="text-ink">${escapeHtml(dateText(record.createdAt))}</span></p></div><div><p class="text-[10px] uppercase tracking-[0.18em] text-stone-500">Design brief</p><p class="mt-2 whitespace-pre-wrap text-sm leading-6">${escapeHtml(record.designBrief || 'No brief supplied.')}</p></div><div><p class="text-[10px] uppercase tracking-[0.18em] text-stone-500">Measurements (cm)</p><div class="mt-3">${measurementMarkup(record.measurements)}</div></div><label class="block text-[10px] uppercase tracking-[0.18em] text-stone-500">Order status<select id="detail-status" class="mt-2 w-full border border-line bg-paper px-3 py-3 text-xs"><option>Received</option><option>Reviewing</option><option>In progress</option><option>Ready</option><option>Delivered</option><option>Cancelled</option></select></label><label class="block text-[10px] uppercase tracking-[0.18em] text-stone-500">Delivery status<input id="detail-delivery" value="${escapeHtml(record.deliveryStatus || '')}" class="mt-2 w-full border border-line bg-paper px-3 py-3 text-xs"></label><label class="block text-[10px] uppercase tracking-[0.18em] text-stone-500">Message for client<textarea id="detail-message" rows="4" class="mt-2 w-full border border-line bg-paper px-3 py-3 text-xs">${escapeHtml(record.adminMessage || '')}</textarea></label><button id="save-detail" class="w-full bg-ink py-3.5 text-[10px] uppercase tracking-[0.2em] text-white">Save order update</button></div>` : `<div class="space-y-7"><div class="grid grid-cols-2 gap-4 border-y border-line py-4 text-xs"><p class="text-stone-500">Email<br><span class="text-ink">${escapeHtml(record.customerEmail || 'Not provided')}</span></p><p class="text-stone-500">Phone<br><span class="text-ink">${escapeHtml(record.customerPhone || 'Not provided')}</span></p><p class="text-stone-500">Date<br><span class="text-ink">${escapeHtml(record.preferredDate)}</span></p><p class="text-stone-500">Time<br><span class="text-ink">${escapeHtml(record.preferredTime)}</span></p></div><p class="text-sm leading-6 whitespace-pre-wrap">${escapeHtml(record.message || 'No message supplied.')}</p><label class="block text-[10px] uppercase tracking-[0.18em] text-stone-500">Appointment status<select id="detail-status" class="mt-2 w-full border border-line bg-paper px-3 py-3 text-xs"><option>New</option><option>Contacted</option><option>Confirmed</option><option>Completed</option><option>Declined</option></select></label><label class="block text-[10px] uppercase tracking-[0.18em] text-stone-500">Reply to client<textarea id="detail-message" rows="5" class="mt-2 w-full border border-line bg-paper px-3 py-3 text-xs">${escapeHtml(record.adminReply || '')}</textarea></label><button id="save-detail" class="w-full bg-ink py-3.5 text-[10px] uppercase tracking-[0.2em] text-white">Save appointment update</button></div>`; $('detail-status').value = record.status || (type === 'order' ? 'Received' : 'New'); $('drawer').classList.remove('pointer-events-none', 'opacity-0'); $('drawer-panel').classList.remove('translate-x-full'); }
-        function closeDrawer() { $('drawer').classList.add('pointer-events-none', 'opacity-0'); $('drawer-panel').classList.add('translate-x-full'); }
-        async function deleteOrder() { const record = state.record; if (state.type !== 'order' || !record) return; if (!window.confirm(`Delete order ${record.orderNumber || 'this order'} permanently?`)) return; try { await deleteDoc(doc(db, 'orders', record.id)); closeDrawer(); showToast('Order deleted.'); } catch (error) { showToast('Could not delete. Check Firestore rules.'); console.error(error); } }
-        async function deleteAppointment() { const record = state.record; if (state.type !== 'appointment' || !record) return; if (!window.confirm('Delete this appointment permanently?')) return; try { await deleteDoc(doc(db, 'appointments', record.id)); closeDrawer(); showToast('Appointment deleted.'); } catch (error) { showToast('Could not delete. Check Firestore rules.'); console.error(error); } }
-        async function saveDetail() { const record = state.record; const updates = { status: $('detail-status').value, updatedAt: new Date() }; if (state.type === 'order') { updates.deliveryStatus = $('detail-delivery').value.trim(); updates.adminMessage = $('detail-message').value.trim(); } else updates.adminReply = $('detail-message').value.trim(); try { await updateDoc(doc(db, state.type === 'order' ? 'orders' : 'appointments', record.id), updates); closeDrawer(); showToast('Update saved.'); } catch (error) { showToast('Could not save. Check Firestore rules.'); console.error(error); } }
+        // UI Elements
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+        const accountDrawer = document.getElementById('account-drawer');
+        const accountOverlay = document.getElementById('account-overlay');
+        const accountPanel = document.getElementById('account-panel');
+        const openAccountBtn = document.getElementById('open-account-btn');
+        const closeAccountBtn = document.getElementById('close-account-btn');
+        const navUserStatus = document.getElementById('nav-user-status');
+        const authErrorMsg = document.getElementById('auth-error-msg');
+        const authSuccessToast = document.getElementById('auth-success-toast');
+        let authErrorTimeout;
+        let authSuccessTimeout;
+        let stopInactivityLogout;
 
-        $('login-form').addEventListener('submit', async (event) => { event.preventDefault(); $('login-message').classList.add('hidden'); try { await signInWithEmailAndPassword(auth, $('login-email').value.trim().toLowerCase(), $('login-password').value); } catch (error) { $('login-message').textContent = `Sign-in failed (${error.code || 'unknown error'}).`; $('login-message').classList.remove('hidden'); } });
-        $('signout').addEventListener('click', () => signOut(auth)); $('close-drawer').addEventListener('click', closeDrawer); $('drawer').addEventListener('click', (event) => { if (event.target === $('drawer')) closeDrawer(); }); $('drawer-content').addEventListener('click', (event) => { if (event.target.id === 'save-detail') saveDetail(); if (event.target.id === 'delete-order') deleteOrder(); });
-        document.querySelectorAll('.nav-button').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.nav-button').forEach((item) => item.classList.toggle('active', item === button)); $('orders-view').classList.toggle('hidden', button.dataset.view !== 'orders'); $('appointments-view').classList.toggle('hidden', button.dataset.view !== 'appointments'); $('account-view').classList.toggle('hidden', button.dataset.view !== 'account'); }));
-        document.querySelectorAll('.nav-button').forEach((button) => { button.classList.add('hover:bg-white'); }); $('order-search').addEventListener('input', renderOrders); $('order-filter').addEventListener('change', renderOrders); $('appointment-filter').addEventListener('change', renderAppointments); $('account-form').addEventListener('submit', createAccountDocument); $('accounts-list').addEventListener('click', (event) => { const copyButton = event.target.closest('[data-copy-account]'); const printButton = event.target.closest('[data-print-account]'); if (copyButton) copyAccountLink(copyButton.dataset.copyAccount); if (printButton) printAccount(printButton.dataset.printAccount); }); $('orders-list').addEventListener('click', (event) => { const button = event.target.closest('[data-order-id]'); if (button) openDrawer('order', button.dataset.orderId); }); $('appointments-list').addEventListener('click', (event) => { const button = event.target.closest('[data-appointment-id]'); if (button) openDrawer('appointment', button.dataset.appointmentId); });
-        onAuthStateChanged(auth, (user) => { const approved = user?.uid === ADMIN_UID; $('login-view').classList.toggle('hidden', approved); $('admin-view').classList.toggle('hidden', !approved); if (!user) return; if (!approved) { signOut(auth); $('login-message').textContent = 'This Firebase account is not approved for the admin workspace.'; $('login-message').classList.remove('hidden'); return; } $('admin-email').textContent = user.email || ''; onSnapshot(collection(db, 'orders'), (snapshot) => { state.orders = sortNewest(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))); renderStats(); renderOrders(); }, () => showToast('Orders could not be loaded.')); onSnapshot(collection(db, 'appointments'), (snapshot) => { state.appointments = sortNewest(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))); renderStats(); renderAppointments(); }, () => showToast('Appointments could not be loaded.')); onSnapshot(collection(db, 'accounts'), (snapshot) => { state.accounts = sortNewest(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))); renderAccounts(); }, () => showToast('Account documents could not be loaded.')); });
-        $('delete-order').addEventListener('click', deleteOrder); $('delete-appointment').addEventListener('click', deleteAppointment); document.addEventListener('click', (event) => { if (event.target.closest('[data-order-id]')) { $('delete-order').classList.remove('hidden'); $('delete-appointment').classList.add('hidden'); } if (event.target.closest('[data-appointment-id]')) { $('delete-order').classList.add('hidden'); $('delete-appointment').classList.remove('hidden'); } });
+        const authFormsContainer = document.getElementById('auth-forms-container');
+        const userDashboardContainer = document.getElementById('user-dashboard-container');
+
+        const tabSigninBtn = document.getElementById('tab-signin-btn');
+        const tabSignupBtn = document.getElementById('tab-signup-btn');
+        const signinForm = document.getElementById('signin-form');
+        const signupForm = document.getElementById('signup-form');
+        const signoutBtn = document.getElementById('signout-btn');
+
+        const userDisplayName = document.getElementById('user-display-name');
+        const userDisplayEmail = document.getElementById('user-display-email');
+        const orderForm = document.getElementById('order-form');
+        const orderFormMessage = document.getElementById('order-form-message');
+        const ordersList = document.getElementById('orders-list');
+        const ordersLoading = document.getElementById('orders-loading');
+
+        function showAuthError(message) {
+            clearTimeout(authErrorTimeout);
+            authErrorMsg.textContent = message;
+            authErrorMsg.classList.remove('hidden');
+            authErrorTimeout = setTimeout(() => {
+                authErrorMsg.classList.add('hidden');
+                authErrorMsg.textContent = '';
+            }, 10000);
+        }
+
+        function showAuthSuccess(message) {
+            clearTimeout(authSuccessTimeout);
+            authSuccessToast.textContent = message;
+            authSuccessToast.classList.remove('hidden');
+            authSuccessTimeout = setTimeout(() => {
+                authSuccessToast.classList.add('hidden');
+                authSuccessToast.textContent = '';
+            }, 10000);
+        }
+
+        function showOrderMessage(message, isError = false) {
+            orderFormMessage.textContent = message;
+            orderFormMessage.className = isError
+                ? 'mt-3 p-3 text-[11px] bg-red-50 border border-red-200 text-red-700'
+                : 'mt-3 p-3 text-[11px] bg-green-50 border border-green-200 text-green-700';
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>'"]/g, (character) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            })[character]);
+        }
+
+        async function loadOrders(user) {
+            ordersLoading.textContent = 'Loading...';
+            try {
+                const ordersQuery = query(collection(db, 'orders'), where('userId', '==', user.uid));
+                const snapshot = await getDocs(ordersQuery);
+                const orders = snapshot.docs.map((orderDocument) => ({ id: orderDocument.id, ...orderDocument.data() }));
+                orders.sort((first, second) => {
+                    const firstDate = first.createdAt?.toMillis?.() || 0;
+                    const secondDate = second.createdAt?.toMillis?.() || 0;
+                    return secondDate - firstDate;
+                });
+
+                ordersLoading.textContent = `${orders.length} order${orders.length === 1 ? '' : 's'}`;
+                ordersList.innerHTML = orders.length
+                    ? orders.map((order) => {
+                        const date = order.createdAt?.toDate?.().toLocaleDateString() || 'Just submitted';
+                        return `<article class="border border-brand-border bg-white p-4">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <p class="text-[10px] uppercase tracking-[0.18em] text-brand-muted">${escapeHtml(order.orderNumber || 'Legacy order')}</p>
+                                    <p class="text-[10px] tracking-[0.18em] uppercase text-brand-muted">${escapeHtml(order.garment)}</p>
+                                    <h5 class="mt-1 font-serif text-xl text-brand-text">${escapeHtml(order.occasion)}</h5>
+                                </div>
+                                <span class="border border-brand-border px-2 py-1 text-[9px] tracking-[0.15em] uppercase text-brand-text">${escapeHtml(order.status)}</span>
+                            </div>
+                            <div class="mt-3 grid grid-cols-2 gap-3 text-[11px] text-brand-muted">
+                                <p>Submitted<br><span class="text-brand-text">${escapeHtml(date)}</span></p>
+                                <p>Delivery<br><span class="text-brand-text">${escapeHtml(order.deliveryStatus)}</span></p>
+                            </div>
+                        </article>`;
+                    }).join('')
+                    : '<p class="border border-dashed border-brand-border p-4 text-xs text-brand-muted">No orders yet. Submit your first bespoke request above.</p>';
+            } catch (error) {
+                ordersLoading.textContent = '';
+                ordersList.innerHTML = '<p class="border border-red-200 bg-red-50 p-4 text-xs text-red-700">We could not load your orders right now.</p>';
+                console.error('Unable to load orders:', error);
+            }
+        }
+
+        // Mobile Navigation
+        mobileMenuBtn.addEventListener('click', () => {
+            const isOpen = !mobileMenu.classList.contains('hidden');
+            mobileMenu.classList.toggle('hidden', isOpen);
+            mobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
+        });
+
+        mobileMenuLinks.forEach((link) => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        // Drawer Controls
+        async function openAccount() {
+            await auth.authStateReady();
+            if (auth.currentUser && !auth.currentUser.isAnonymous) {
+                window.location.href = 'client-dashboard.html';
+                return;
+            }
+            accountDrawer.classList.remove('pointer-events-none');
+            accountOverlay.classList.remove('opacity-0', 'pointer-events-none');
+            accountOverlay.classList.add('opacity-100');
+            accountPanel.classList.remove('translate-x-full');
+        }
+
+        function closeAccount() {
+            accountOverlay.classList.remove('opacity-100');
+            accountOverlay.classList.add('opacity-0', 'pointer-events-none');
+            accountPanel.classList.add('translate-x-full');
+            setTimeout(() => accountDrawer.classList.add('pointer-events-none'), 300);
+        }
+
+        openAccountBtn.addEventListener('click', () => openAccount());
+        document.getElementById('order-now-btn').addEventListener('click', (event) => {
+            event.preventDefault();
+            openAccount();
+        });
+        closeAccountBtn.addEventListener('click', closeAccount);
+        accountOverlay.addEventListener('click', closeAccount);
+
+        // Tabs
+        tabSigninBtn.addEventListener('click', () => {
+            signinForm.classList.remove('hidden');
+            signupForm.classList.add('hidden');
+        });
+
+        tabSignupBtn.addEventListener('click', () => {
+            signupForm.classList.remove('hidden');
+            signinForm.classList.add('hidden');
+        });
+
+        // Sign Up
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const fname = document.getElementById('signup-fname').value;
+            const lname = document.getElementById('signup-lname').value;
+
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await updateProfile(userCredential.user, { displayName: `${fname} ${lname}` });
+                await setDoc(doc(db, 'users', userCredential.user.uid), {
+                    uid: userCredential.user.uid,
+                    firstName: fname,
+                    lastName: lname,
+                    displayName: `${fname} ${lname}`,
+                    email,
+                    createdAt: serverTimestamp()
+                });
+                window.location.href = 'client-dashboard.html';
+            } catch (error) {
+                showAuthError(error.code === 'auth/email-already-in-use'
+                    ? 'This email already has an account. Please use the Sign In tab.'
+                    : error.message);
+            }
+        });
+
+        orderForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = auth.currentUser;
+            if (!user) {
+                showOrderMessage('Please sign in before placing an order.', true);
+                return;
+            }
+
+            const submitButton = orderForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Submitting...';
+
+            try {
+                await addDoc(collection(db, 'orders'), {
+                    orderNumber: `RS-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+                    userId: user.uid,
+                    customerEmail: user.email,
+                    garment: document.getElementById('order-garment').value,
+                    occasion: document.getElementById('order-occasion').value.trim(),
+                    designBrief: document.getElementById('order-notes').value.trim(),
+                    measurements: {
+                        chest: Number(document.getElementById('measurement-chest').value),
+                        waist: Number(document.getElementById('measurement-waist').value),
+                        shoulder: Number(document.getElementById('measurement-shoulder').value),
+                        length: Number(document.getElementById('measurement-length').value)
+                    },
+                    inspirationLinks: document.getElementById('order-inspiration').value.trim().split('\n').filter(Boolean),
+                    status: 'Received',
+                    deliveryStatus: 'To be confirmed',
+                    createdAt: serverTimestamp()
+                });
+                orderForm.reset();
+                showOrderMessage('Your order request has been received.');
+                await loadOrders(user);
+            } catch (error) {
+                showOrderMessage('We could not submit your order. Please try again.', true);
+                console.error('Unable to submit order:', error);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Place Order Request';
+            }
+        });
+
+        // Sign In
+        signinForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signin-email').value;
+            const password = document.getElementById('signin-password').value;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                window.location.href = 'client-dashboard.html';
+            } catch (error) {
+                showAuthError('Invalid email or password.');
+            }
+        });
+
+        // Sign Out
+        signoutBtn.addEventListener('click', () => signOut(auth));
+
+        // Auth Listener
+        onAuthStateChanged(auth, (user) => {
+            stopInactivityLogout?.();
+            if (user) {
+                const name = user.displayName || user.email?.split('@')[0] || 'Client';
+                navUserStatus.textContent = user.isAnonymous ? 'Sign In / Sign Up' : name.split(' ')[0];
+                authFormsContainer.classList.add('hidden');
+                userDashboardContainer.classList.remove('hidden');
+                userDisplayName.textContent = `Welcome back, ${name}`;
+                userDisplayEmail.textContent = user.email || 'Guest order session';
+                loadOrders(user);
+                if (!user.isAnonymous) {
+                    stopInactivityLogout = startInactivityLogout(auth, signOut, () => {
+                        closeAccount();
+                        showAuthError('You were signed out after 30 minutes of inactivity.');
+                    });
+                }
+            } else {
+                navUserStatus.textContent = 'Sign In / Sign Up';
+                authFormsContainer.classList.remove('hidden');
+                userDashboardContainer.classList.add('hidden');
+            }
+        });
+
+        setTimeout(() => {
+            document.getElementById('hero-slide-custom').classList.add('hero-slide-hidden');
+            document.getElementById('hero-slide-current').classList.remove('hero-slide-hidden');
+        }, 7000);
     </script>
 </body>
 </html>

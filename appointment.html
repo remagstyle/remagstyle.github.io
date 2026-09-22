@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book an Appointment | REMAGSTYLE</title>
+    <link rel="icon" type="image/png" href="image/Logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#F9F8F6',
+                            card: '#EFECE6',
+                            text: '#111111',
+                            muted: '#666666',
+                            border: '#E2DFD8'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #F9F8F6; color: #111111; -webkit-font-smoothing: antialiased; }
+        .font-serif { font-family: 'Cormorant Garamond', serif; }
+        ::-webkit-scrollbar { width: 5px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #F9F8F6; }
+        ::-webkit-scrollbar-thumb { background: #D1CDC6; border-radius: 9999px; }
+        @keyframes background-zoom-out {
+            from { transform: scale(1.08); }
+            to { transform: scale(1); }
+        }
+        .appointment-image-motion { animation: background-zoom-out 12s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        @keyframes text-reveal {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .text-reveal > * { opacity: 0; animation: text-reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .text-reveal > *:nth-child(2) { animation-delay: 0.1s; }
+        .text-reveal > *:nth-child(3) { animation-delay: 0.2s; }
+        .text-reveal > *:nth-child(4) { animation-delay: 0.3s; }
+        @media (prefers-reduced-motion: reduce) {
+            .appointment-image-motion { animation: none; }
+            .text-reveal > * { opacity: 1; animation: none; }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-brand-bg text-brand-text">
+    <header class="border-b border-brand-border/60 bg-brand-bg/95 backdrop-blur-md">
+        <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8 lg:px-12">
+            <a href="index.html" aria-label="REMAGSTYLE home" class="flex items-center">
+                <img src="image/Logo.png" alt="REMAGSTYLE" decoding="async" class="h-14 w-14 object-contain">
+            </a>
+            <a href="index.html" class="text-[10px] font-medium uppercase tracking-[0.18em] transition-opacity hover:opacity-50">Back to site</a>
+        </nav>
+    </header>
+
+    <main class="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-5 py-10 sm:px-8 sm:py-16 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20 lg:px-12">
+        <section class="relative overflow-hidden bg-[#D6D2CA] px-6 py-10 sm:px-10 sm:py-16 lg:py-20">
+            <div class="absolute inset-0">
+                <img src="image/hero2.jpg" alt="REMAGSTYLE Luxury Collection" fetchpriority="high" decoding="async" class="appointment-image-motion h-full w-full object-cover object-[65%] brightness-[0.97]">
+                <div class="absolute inset-0 bg-gradient-to-r from-brand-bg/30 via-brand-bg/15 to-brand-bg/5"></div>
+            </div>
+            <div class="relative z-10 text-reveal">
+                <p class="text-[10px] font-medium uppercase tracking-[0.25em] text-brand-muted">Accra / Ghana</p>
+                <h1 class="mt-3 font-serif text-5xl font-light leading-none sm:text-6xl">Let us tailor time for you.</h1>
+                <p class="mt-6 max-w-md text-sm font-bold leading-7 text-black">Book a private consultation with the REMAGSTYLE atelier to discuss your garment, measurements, fabric, and occasion.</p>
+                <div class="mt-10 border-l-2 border-brand-text pl-4 text-xs font-bold leading-6 tracking-wide text-black drop-shadow-sm">
+                <p>Appointments are available Monday - Saturday.</p>
+                <p>9:00 - 18:00, Accra, Ghana.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="mb-6">
+                <p class="text-[10px] font-medium uppercase tracking-[0.25em] text-brand-muted">Private Consultation</p>
+                <h2 class="mt-1 font-serif text-3xl font-light">Request an appointment</h2>
+            </div>
+            <form id="appointment-form" class="space-y-5 border border-brand-border bg-white p-5 sm:p-8">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="appointment-name" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Full name</label>
+                        <input type="text" id="appointment-name" required placeholder="Your name" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="appointment-email" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Email</label>
+                        <input type="email" id="appointment-email" required placeholder="name@example.com" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="appointment-phone" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Mobile number</label>
+                        <input type="tel" id="appointment-phone" required placeholder="+233 00 000 0000" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="appointment-date" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Preferred date</label>
+                        <input type="date" id="appointment-date" required class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
+                    </div>
+                    <div>
+                        <label for="appointment-time" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Preferred time</label>
+                        <input type="time" id="appointment-time" required class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="appointment-service" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Consultation for</label>
+                    <select id="appointment-service" required class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
+                        <option value="">Select a service</option>
+                        <option>Bespoke Suit</option>
+                        <option>Kente Ensemble</option>
+                        <option>Evening Wear</option>
+                        <option>Bridal Couture</option>
+                        <option>Measurements and Styling</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="appointment-message" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Tell us more</label>
+                    <textarea id="appointment-message" rows="5" placeholder="Share your occasion, preferred style, or any questions." class="w-full resize-y border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-brand-text py-3.5 text-[10px] font-medium uppercase tracking-[0.2em] text-white transition-colors hover:bg-black/80">Send Appointment Request</button>
+                <p id="appointment-message-status" class="hidden p-3 text-[11px]"></p>
+            </form>
+        </section>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+        import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+        const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appointmentForm = document.getElementById('appointment-form');
+        const appointmentStatus = document.getElementById('appointment-message-status');
+
+        appointmentForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const submitButton = appointmentForm.querySelector('button[type="submit"]');
+            const name = document.getElementById('appointment-name').value.trim();
+            const email = document.getElementById('appointment-email').value.trim();
+            const phone = document.getElementById('appointment-phone').value.trim();
+            const date = document.getElementById('appointment-date').value;
+            const time = document.getElementById('appointment-time').value;
+            const service = document.getElementById('appointment-service').value;
+            const message = document.getElementById('appointment-message').value.trim() || 'No additional details provided.';
+            submitButton.disabled = true;
+            submitButton.textContent = 'Sending...';
+            try {
+                await addDoc(collection(db, 'appointments'), {
+                    customerName: name,
+                    customerEmail: email,
+                    customerPhone: phone,
+                    preferredDate: date,
+                    preferredTime: time,
+                    service,
+                    message,
+                    status: 'New',
+                    createdAt: serverTimestamp()
+                });
+                appointmentForm.reset();
+                appointmentStatus.textContent = 'Your appointment request has been received. We will reply shortly.';
+                appointmentStatus.className = 'p-3 text-[11px] bg-green-50 border border-green-200 text-green-700';
+            } catch (error) {
+                appointmentStatus.textContent = 'We could not send your request right now. Please try again.';
+                appointmentStatus.className = 'p-3 text-[11px] bg-red-50 border border-red-200 text-red-700';
+                console.error('Unable to save appointment:', error);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Send Appointment Request';
+            }
+        });
+
+        setTimeout(() => {
+            const appointmentForm = document.getElementById('appointment-form');
+            if (appointmentForm && window.scrollY < 120) {
+                appointmentForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 9000);
+    </script>
+</body>
+</html>
