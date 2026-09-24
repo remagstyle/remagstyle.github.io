@@ -54,7 +54,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-        import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { getFirestore, setDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -132,7 +132,7 @@
             const orderNumber = `RS-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
             try {
                 const userCredential = auth.currentUser || (await signInAnonymously(auth));
-                await addDoc(collection(db, 'orders'), { orderNumber, guestOrder: true, userId: userCredential.user.uid, customerName: document.getElementById('guest-name').value.trim(), customerPhone: document.getElementById('guest-phone').value.trim(), gender: gender.value, garment: garment.value, occasion: document.getElementById('order-occasion').value.trim(), designBrief: document.getElementById('order-notes').value.trim(), measurements: {}, inspirationLinks: document.getElementById('order-inspiration').value.trim().split('\n').filter(Boolean), status: 'Received', deliveryStatus: 'To be confirmed', createdAt: serverTimestamp() });
+                await setDoc(doc(db, 'orders', orderNumber), { orderNumber, guestOrder: true, userId: userCredential.user.uid, customerName: document.getElementById('guest-name').value.trim(), customerPhone: document.getElementById('guest-phone').value.trim(), gender: gender.value, garment: garment.value, occasion: document.getElementById('order-occasion').value.trim(), designBrief: document.getElementById('order-notes').value.trim(), measurements: {}, inspirationLinks: document.getElementById('order-inspiration').value.trim().split('\n').filter(Boolean), status: 'Received', deliveryStatus: 'To be confirmed', createdAt: serverTimestamp() });
                 form.reset();
                 updateGarmentOptions();
                 updateMeasurementFlow();

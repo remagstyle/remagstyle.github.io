@@ -581,6 +581,8 @@
             appId: "1:145831201308:web:489a014516356f73a72dd9"
         };
 
+        const ADMIN_UID = 'jDvJwjfMgoTU2oXXxmK2AwywrlN2';
+        const ADMIN_EMAIL = 'admin@remagstyle.com';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -708,9 +710,17 @@
         });
 
         // Drawer Controls
+        function isAdminUser(user) {
+            return !!user && (user.uid === ADMIN_UID || user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+        }
+
         async function openAccount() {
             await auth.authStateReady();
             if (auth.currentUser && !auth.currentUser.isAnonymous) {
+                if (isAdminUser(auth.currentUser)) {
+                    window.location.href = 'admin/index.html';
+                    return;
+                }
                 window.location.href = 'client-dashboard.html';
                 return;
             }
@@ -749,10 +759,15 @@
         // Sign Up
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('signup-email').value;
+            const email = document.getElementById('signup-email').value.trim().toLowerCase();
             const password = document.getElementById('signup-password').value;
             const fname = document.getElementById('signup-fname').value;
             const lname = document.getElementById('signup-lname').value;
+
+            if (email === ADMIN_EMAIL.toLowerCase()) {
+                showAuthError('Use the admin login page for the administrator account.');
+                return;
+            }
 
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -786,8 +801,9 @@
             submitButton.textContent = 'Submitting...';
 
             try {
-                await addDoc(collection(db, 'orders'), {
-                    orderNumber: `RS-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+                const orderNumber = `RS-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+                await setDoc(doc(db, 'orders', orderNumber), {
+                    orderNumber,
                     userId: user.uid,
                     customerEmail: user.email,
                     garment: document.getElementById('order-garment').value,
@@ -819,11 +835,21 @@
         // Sign In
         signinForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('signin-email').value;
+            const email = document.getElementById('signin-email').value.trim().toLowerCase();
             const password = document.getElementById('signin-password').value;
 
+            if (email === ADMIN_EMAIL.toLowerCase()) {
+                showAuthError('Use the admin login page for the administrator account.');
+                return;
+            }
+
             try {
-                await signInWithEmailAndPassword(auth, email, password);
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                if (isAdminUser(userCredential.user)) {
+                    await signOut(auth);
+                    showAuthError('This account is reserved for the admin workspace.');
+                    return;
+                }
                 window.location.href = 'client-dashboard.html';
             } catch (error) {
                 showAuthError('Invalid email or password.');
@@ -834,8 +860,13 @@
         signoutBtn.addEventListener('click', () => signOut(auth));
 
         // Auth Listener
-        onAuthStateChanged(auth, (user) => {
+        onAuthStateChanged(auth, async (user) => {
             stopInactivityLogout?.();
+            if (user && isAdminUser(user)) {
+                await signOut(auth);
+                window.location.href = 'admin/index.html';
+                return;
+            }
             if (user) {
                 const name = user.displayName || user.email?.split('@')[0] || 'Client';
                 navUserStatus.textContent = user.isAnonymous ? 'Sign In / Sign Up' : name.split(' ')[0];
