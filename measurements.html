@@ -334,6 +334,7 @@
                             : draft.inspirationLinks?.split('\n').filter(Boolean) || [],
                         status: 'Received',
                         deliveryStatus: 'To be confirmed',
+                        estimatedCompletionAt: null,
                         createdAt: serverTimestamp()
                     };
                     if (auth.currentUser?.email) order.customerEmail = auth.currentUser.email;

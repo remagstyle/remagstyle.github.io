@@ -132,7 +132,7 @@
             const orderNumber = `RS-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
             try {
                 const userId = auth.currentUser && !auth.currentUser.isAnonymous ? auth.currentUser.uid : null;
-                await setDoc(doc(db, 'orders', orderNumber), { orderNumber, guestOrder: true, userId, customerName: document.getElementById('guest-name').value.trim(), customerPhone: document.getElementById('guest-phone').value.trim(), gender: gender.value, garment: garment.value, occasion: document.getElementById('order-occasion').value.trim(), designBrief: document.getElementById('order-notes').value.trim(), measurements: {}, inspirationLinks: document.getElementById('order-inspiration').value.trim().split('\n').filter(Boolean), status: 'Received', deliveryStatus: 'To be confirmed', createdAt: serverTimestamp() });
+                await setDoc(doc(db, 'orders', orderNumber), { orderNumber, guestOrder: true, userId, customerName: document.getElementById('guest-name').value.trim(), customerPhone: document.getElementById('guest-phone').value.trim(), gender: gender.value, garment: garment.value, occasion: document.getElementById('order-occasion').value.trim(), designBrief: document.getElementById('order-notes').value.trim(), measurements: {}, inspirationLinks: document.getElementById('order-inspiration').value.trim().split('\n').filter(Boolean), status: 'Received', deliveryStatus: 'To be confirmed', estimatedCompletionAt: null, createdAt: serverTimestamp() });
                 form.reset();
                 updateGarmentOptions();
                 updateMeasurementFlow();
