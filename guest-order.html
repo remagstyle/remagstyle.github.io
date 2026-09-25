@@ -53,7 +53,7 @@
     </main>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
         import { getFirestore, setDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
         const auth = getAuth(app);
@@ -106,7 +106,7 @@
         document.getElementById('guest-measurements-next-btn').addEventListener('click', async () => {
             if (!garment.reportValidity() || !document.getElementById('order-occasion').reportValidity() || !document.getElementById('order-notes').reportValidity()) return;
             try {
-                const userCredential = auth.currentUser || (await signInAnonymously(auth));
+                const userId = auth.currentUser && !auth.currentUser.isAnonymous ? auth.currentUser.uid : null;
                 sessionStorage.setItem('remagstyle-order-draft', JSON.stringify({
                     customerName: document.getElementById('guest-name').value.trim(),
                     customerPhone: document.getElementById('guest-phone').value.trim(),
@@ -115,7 +115,7 @@
                     occasion: document.getElementById('order-occasion').value.trim(),
                     designBrief: document.getElementById('order-notes').value.trim(),
                     inspirationLinks: document.getElementById('order-inspiration').value.trim(),
-                    userId: userCredential.user.uid
+                    userId
                 }));
                 window.location.href = 'measurements.html';
             } catch (error) {
@@ -131,8 +131,8 @@
             button.textContent = 'Submitting...';
             const orderNumber = `RS-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
             try {
-                const userCredential = auth.currentUser || (await signInAnonymously(auth));
-                await setDoc(doc(db, 'orders', orderNumber), { orderNumber, guestOrder: true, userId: userCredential.user.uid, customerName: document.getElementById('guest-name').value.trim(), customerPhone: document.getElementById('guest-phone').value.trim(), gender: gender.value, garment: garment.value, occasion: document.getElementById('order-occasion').value.trim(), designBrief: document.getElementById('order-notes').value.trim(), measurements: {}, inspirationLinks: document.getElementById('order-inspiration').value.trim().split('\n').filter(Boolean), status: 'Received', deliveryStatus: 'To be confirmed', createdAt: serverTimestamp() });
+                const userId = auth.currentUser && !auth.currentUser.isAnonymous ? auth.currentUser.uid : null;
+                await setDoc(doc(db, 'orders', orderNumber), { orderNumber, guestOrder: true, userId, customerName: document.getElementById('guest-name').value.trim(), customerPhone: document.getElementById('guest-phone').value.trim(), gender: gender.value, garment: garment.value, occasion: document.getElementById('order-occasion').value.trim(), designBrief: document.getElementById('order-notes').value.trim(), measurements: {}, inspirationLinks: document.getElementById('order-inspiration').value.trim().split('\n').filter(Boolean), status: 'Received', deliveryStatus: 'To be confirmed', createdAt: serverTimestamp() });
                 form.reset();
                 updateGarmentOptions();
                 updateMeasurementFlow();
@@ -142,11 +142,9 @@
                 message.className = 'border border-green-200 bg-green-50 p-4 text-[11px] text-green-800';
                 message.innerHTML = `Your request has been received. Your order number is <strong>${orderNumber}</strong>. <a class="underline" href="track-order.html?order=${orderNumber}">Track this order</a>`;
             } catch (error) {
-                message.textContent = error.code === 'auth/operation-not-allowed'
-                    ? 'Guest ordering is not enabled in Firebase yet. Enable Anonymous sign-in in Firebase Authentication, then try again.'
-                    : error.code === 'permission-denied'
-                        ? 'Firebase security rules are blocking guest orders. Allow signed-in users to create orders, then try again.'
-                        : 'We could not submit your order. Please try again.';
+                message.textContent = error.code === 'permission-denied'
+                    ? 'Firebase security rules are blocking guest orders. Allow unauthenticated guest orders to create order documents with userId set to null, then try again.'
+                    : 'We could not submit your order. Please try again.';
                 message.className = 'border border-red-200 bg-red-50 p-4 text-[11px] text-red-700';
                 console.error('Unable to submit guest order:', error);
             } finally { button.disabled = false; button.textContent = 'Submit Guest Order'; }

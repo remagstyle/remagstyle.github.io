@@ -38,7 +38,7 @@
     </main>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
         import { getFirestore, setDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
         const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
@@ -317,11 +317,11 @@
                 const orderNumber = `RS-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
                 try {
                     await auth.authStateReady();
-                    const userCredential = auth.currentUser || (await signInAnonymously(auth));
+                    const userId = auth.currentUser && !auth.currentUser.isAnonymous ? auth.currentUser.uid : null;
                     const order = {
                         orderNumber,
-                        guestOrder: userCredential.user.isAnonymous,
-                        userId: userCredential.user.uid,
+                        guestOrder: !userId,
+                        userId,
                         customerName: draft.customerName,
                         customerPhone: draft.customerPhone,
                         gender: draft.gender,
@@ -336,7 +336,7 @@
                         deliveryStatus: 'To be confirmed',
                         createdAt: serverTimestamp()
                     };
-                    if (userCredential.user.email) order.customerEmail = userCredential.user.email;
+                    if (auth.currentUser?.email) order.customerEmail = auth.currentUser.email;
                     await setDoc(doc(db, 'orders', orderNumber), order);
                     sessionStorage.removeItem('remagstyle-order-draft');
                     message.innerHTML = `Your order has been submitted. Your order number is <strong>${orderNumber}</strong>. <a class="underline" href="track-order.html?order=${orderNumber}">Track this order</a>`;
