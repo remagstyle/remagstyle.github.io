@@ -279,6 +279,31 @@
             })[character]);
         }
 
+        function formatEtaValue(value) {
+            if (!value) return '';
+            if (typeof value === 'string') {
+                const trimmed = value.trim();
+                if (!trimmed) return '';
+                const parsed = new Date(trimmed);
+                if (!Number.isNaN(parsed.getTime())) {
+                    return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(parsed);
+                }
+                return trimmed;
+            }
+            let date;
+            if (typeof value.toDate === 'function') {
+                date = value.toDate();
+            } else if (value instanceof Date) {
+                date = value;
+            } else if (typeof value === 'number') {
+                date = new Date(value);
+            } else if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
+                date = new Date((value.seconds * 1000) + ((value.nanoseconds || 0) / 1000000));
+            }
+            if (!date || Number.isNaN(date.getTime())) return '';
+            return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(date);
+        }
+
         async function loadOrders(user) {
             ordersLoading.textContent = 'Loading...';
             try {
@@ -289,6 +314,7 @@
                 ordersLoading.textContent = `${orders.length} order${orders.length === 1 ? '' : 's'}`;
                 ordersList.innerHTML = orders.length ? orders.map((order) => {
                     const date = order.createdAt?.toDate?.().toLocaleDateString() || 'Just submitted';
+                    const etaValue = formatEtaValue(order.estimatedCompletionAt ?? order.estimatedCompletion ?? order.estimatedCompletionDate ?? order.estimatedTime ?? order.eta ?? null);
                     return `<article class="border border-brand-border bg-white p-5">
                         <div class="flex flex-wrap items-start justify-between gap-3">
                             <div>
@@ -300,6 +326,9 @@
                         </div>
                         <div class="mt-4 grid grid-cols-2 gap-4 border-t border-brand-border pt-3 text-[11px] text-brand-muted">
                             <p>Submitted<br><span class="text-brand-text">${escapeHtml(date)}</span></p>
+                            <p>Estimated completion<br><span class="text-brand-text">${etaValue ? escapeHtml(etaValue) : 'ETA pending'}</span></p>
+                        </div>
+                        <div class="mt-4 grid grid-cols-2 gap-4 border-t border-brand-border pt-3 text-[11px] text-brand-muted">
                             <p>Delivery<br><span class="text-brand-text">${escapeHtml(order.deliveryStatus)}</span></p>
                         </div>
                         ${order.adminMessage ? `<div class="mt-4 border-l-2 border-brand-text bg-brand-bg px-3 py-2 text-[11px] leading-5 text-brand-text"><span class="font-medium uppercase tracking-[0.12em]">Atelier update</span><br>${escapeHtml(order.adminMessage)}</div>` : ''}
