@@ -1,14 +1,18 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guest Order | REMAGSTYLE</title>
     <link rel="icon" type="image/png" href="image/Logo.png">
-    <link rel="stylesheet" href="site.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { brand: { bg: '#F9F8F6', text: '#111111', muted: '#666666', border: '#E2DFD8' } }, fontFamily: { serif: ['Cormorant Garamond', 'Georgia', 'serif'], sans: ['Inter', 'sans-serif'] } } };
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; } .font-serif { font-family: 'Cormorant Garamond', serif; }</style>
 </head>
 <body class="min-h-screen bg-brand-bg text-brand-text">
     <header class="border-b border-brand-border/60 bg-brand-bg/95">
@@ -47,6 +51,106 @@
             <p id="order-message" class="hidden p-4 text-[11px]" role="status"></p>
         </form>
     </main>
-    <script src="guest-order.js" type="module"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+        import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const form = document.getElementById('guest-order-form');
+        const message = document.getElementById('order-message');
+        const stepOne = document.getElementById('order-step-1');
+        const stepTwo = document.getElementById('order-step-2');
+        const gender = document.getElementById('guest-gender');
+        const garment = document.getElementById('order-garment');
+        const stepTwoFields = stepTwo.querySelectorAll('input, select, textarea');
+        const measurementGarments = ['Trousers', 'Shirts (Long & Short)', 'Suits', 'Kaftan/Agbada', 'Bridal Couture', 'Red Carpet Dresses', 'Prom Dress', 'Corset Dresses', 'Slit and Kaba'];
+        const garmentOptions = {
+            Male: ['Trousers', 'Shirts (Long & Short)', 'Suits', 'Kaftan/Agbada'],
+            Female: ['Bridal Couture', 'Red Carpet Dresses', 'Prom Dress', 'Corset Dresses', 'Slit and Kaba'],
+            Other: ['Custom Bespoke Design', 'Kente Ensemble', 'Evening Wear']
+        };
+
+        function updateGarmentOptions() {
+            garment.innerHTML = '<option value="">Select a garment</option>';
+            (garmentOptions[gender.value] || []).forEach((option) => {
+                garment.insertAdjacentHTML('beforeend', `<option>${option}</option>`);
+            });
+        }
+
+        function updateMeasurementFlow() {
+            const usesMeasurementPage = measurementGarments.includes(garment.value);
+            document.getElementById('guest-measurements-next-btn').classList.toggle('hidden', !usesMeasurementPage);
+            document.getElementById('guest-submit-btn').classList.toggle('hidden', usesMeasurementPage);
+        }
+
+        stepTwoFields.forEach((field) => { field.disabled = true; });
+
+        document.getElementById('guest-next-btn').addEventListener('click', () => {
+            if (!document.getElementById('guest-name').reportValidity() || !document.getElementById('guest-phone').reportValidity() || !gender.reportValidity()) return;
+            updateGarmentOptions();
+            stepTwoFields.forEach((field) => { field.disabled = false; });
+            stepOne.classList.add('hidden');
+            stepTwo.classList.remove('hidden');
+        });
+        document.getElementById('guest-back-btn').addEventListener('click', () => {
+            stepTwoFields.forEach((field) => { field.disabled = true; });
+            stepTwo.classList.add('hidden');
+            stepOne.classList.remove('hidden');
+        });
+        gender.addEventListener('change', updateGarmentOptions);
+        gender.addEventListener('change', updateMeasurementFlow);
+        garment.addEventListener('change', updateMeasurementFlow);
+
+        document.getElementById('guest-measurements-next-btn').addEventListener('click', async () => {
+            if (!garment.reportValidity() || !document.getElementById('order-occasion').reportValidity() || !document.getElementById('order-notes').reportValidity()) return;
+            try {
+                const userCredential = auth.currentUser || (await signInAnonymously(auth));
+                sessionStorage.setItem('remagstyle-order-draft', JSON.stringify({
+                    customerName: document.getElementById('guest-name').value.trim(),
+                    customerPhone: document.getElementById('guest-phone').value.trim(),
+                    gender: gender.value,
+                    garment: garment.value,
+                    occasion: document.getElementById('order-occasion').value.trim(),
+                    designBrief: document.getElementById('order-notes').value.trim(),
+                    inspirationLinks: document.getElementById('order-inspiration').value.trim(),
+                    userId: userCredential.user.uid
+                }));
+                window.location.href = 'measurements.html';
+            } catch (error) {
+                message.textContent = error.message || 'We could not prepare your order. Please try again.';
+                message.className = 'border border-red-200 bg-red-50 p-4 text-[11px] text-red-700';
+            }
+        });
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const button = document.getElementById('guest-submit-btn');
+            button.disabled = true;
+            button.textContent = 'Submitting...';
+            const orderNumber = `RS-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+            try {
+                const userCredential = auth.currentUser || (await signInAnonymously(auth));
+                await addDoc(collection(db, 'orders'), { orderNumber, guestOrder: true, userId: userCredential.user.uid, customerName: document.getElementById('guest-name').value.trim(), customerPhone: document.getElementById('guest-phone').value.trim(), gender: gender.value, garment: garment.value, occasion: document.getElementById('order-occasion').value.trim(), designBrief: document.getElementById('order-notes').value.trim(), measurements: {}, inspirationLinks: document.getElementById('order-inspiration').value.trim().split('\n').filter(Boolean), status: 'Received', deliveryStatus: 'To be confirmed', createdAt: serverTimestamp() });
+                form.reset();
+                updateGarmentOptions();
+                updateMeasurementFlow();
+                stepTwoFields.forEach((field) => { field.disabled = true; });
+                stepTwo.classList.add('hidden');
+                stepOne.classList.remove('hidden');
+                message.className = 'border border-green-200 bg-green-50 p-4 text-[11px] text-green-800';
+                message.innerHTML = `Your request has been received. Your order number is <strong>${orderNumber}</strong>. <a class="underline" href="track-order.html?order=${orderNumber}">Track this order</a>`;
+            } catch (error) {
+                message.textContent = error.code === 'auth/operation-not-allowed'
+                    ? 'Guest ordering is not enabled in Firebase yet. Enable Anonymous sign-in in Firebase Authentication, then try again.'
+                    : error.code === 'permission-denied'
+                        ? 'Firebase security rules are blocking guest orders. Allow signed-in users to create orders, then try again.'
+                        : 'We could not submit your order. Please try again.';
+                message.className = 'border border-red-200 bg-red-50 p-4 text-[11px] text-red-700';
+                console.error('Unable to submit guest order:', error);
+            } finally { button.disabled = false; button.textContent = 'Submit Guest Order'; }
+        });
+    </script>
 </body>
 </html>

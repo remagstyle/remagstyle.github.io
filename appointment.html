@@ -1,14 +1,59 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Book an Appointment | REMAGSTYLE</title>
     <link rel="icon" type="image/png" href="image/Logo.png">
-    <link rel="stylesheet" href="site.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#F9F8F6',
+                            card: '#EFECE6',
+                            text: '#111111',
+                            muted: '#666666',
+                            border: '#E2DFD8'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #F9F8F6; color: #111111; -webkit-font-smoothing: antialiased; }
+        .font-serif { font-family: 'Cormorant Garamond', serif; }
+        ::-webkit-scrollbar { width: 5px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #F9F8F6; }
+        ::-webkit-scrollbar-thumb { background: #D1CDC6; border-radius: 9999px; }
+        @keyframes background-zoom-out {
+            from { transform: scale(1.08); }
+            to { transform: scale(1); }
+        }
+        .appointment-image-motion { animation: background-zoom-out 12s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        @keyframes text-reveal {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .text-reveal > * { opacity: 0; animation: text-reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .text-reveal > *:nth-child(2) { animation-delay: 0.1s; }
+        .text-reveal > *:nth-child(3) { animation-delay: 0.2s; }
+        .text-reveal > *:nth-child(4) { animation-delay: 0.3s; }
+        @media (prefers-reduced-motion: reduce) {
+            .appointment-image-motion { animation: none; }
+            .text-reveal > * { opacity: 1; animation: none; }
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-brand-bg text-brand-text">
     <header class="border-b border-brand-border/60 bg-brand-bg/95 backdrop-blur-md">
@@ -92,6 +137,60 @@
         </section>
     </main>
 
-    <script src="appointment.js" type="module"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+        import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+        const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appointmentForm = document.getElementById('appointment-form');
+        const appointmentStatus = document.getElementById('appointment-message-status');
+
+        appointmentForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const submitButton = appointmentForm.querySelector('button[type="submit"]');
+            const name = document.getElementById('appointment-name').value.trim();
+            const email = document.getElementById('appointment-email').value.trim();
+            const phone = document.getElementById('appointment-phone').value.trim();
+            const date = document.getElementById('appointment-date').value;
+            const time = document.getElementById('appointment-time').value;
+            const service = document.getElementById('appointment-service').value;
+            const message = document.getElementById('appointment-message').value.trim() || 'No additional details provided.';
+            submitButton.disabled = true;
+            submitButton.textContent = 'Sending...';
+            try {
+                await addDoc(collection(db, 'appointments'), {
+                    customerName: name,
+                    customerEmail: email,
+                    customerPhone: phone,
+                    preferredDate: date,
+                    preferredTime: time,
+                    service,
+                    message,
+                    status: 'New',
+                    createdAt: serverTimestamp()
+                });
+                appointmentForm.reset();
+                appointmentStatus.textContent = 'Your appointment request has been received. We will reply shortly.';
+                appointmentStatus.className = 'p-3 text-[11px] bg-green-50 border border-green-200 text-green-700';
+            } catch (error) {
+                appointmentStatus.textContent = 'We could not send your request right now. Please try again.';
+                appointmentStatus.className = 'p-3 text-[11px] bg-red-50 border border-red-200 text-red-700';
+                console.error('Unable to save appointment:', error);
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Send Appointment Request';
+            }
+        });
+
+        setTimeout(() => {
+            const appointmentForm = document.getElementById('appointment-form');
+            if (appointmentForm && window.scrollY < 120) {
+                appointmentForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 9000);
+    </script>
 </body>
 </html>
