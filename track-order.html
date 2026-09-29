@@ -21,12 +21,16 @@
         let liveOrderUnsubscribe = null;
         function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]); }
         function renderAmountDue(order, orderId) {
-            const amountDue = Number(order.amountDue);
+            const amountDue = Number(order.amountDue ?? order.paymentAmount ?? order.PaymentAmmount);
+            const currency = String(order.currency ?? order.amountCurrency ?? 'GHS').trim().toUpperCase();
+            const hasValidCurrency = /^[A-Z]{3}$/.test(currency);
             const hasAmountDue = Number.isFinite(amountDue) && amountDue > 0;
             const isPaid = order.paymentStatus === 'Paid';
-            const canPay = hasAmountDue && !isPaid;
+            const canPay = hasAmountDue && hasValidCurrency && !isPaid;
             const amountLabel = hasAmountDue
-                ? new Intl.NumberFormat('en-GH', { style: 'currency', currency: 'GHS' }).format(amountDue)
+                ? hasValidCurrency
+                    ? new Intl.NumberFormat('en-GH', { style: 'currency', currency }).format(amountDue)
+                    : `${amountDue.toFixed(2)} ${currency || 'currency pending'}`
                 : 'Pending';
             const section = document.createElement('section');
             section.id = 'amount-due-section';

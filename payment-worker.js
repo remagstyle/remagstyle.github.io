@@ -55,8 +55,9 @@ export default {
             const document = await orderResponse.json();
             const fields = document.fields || {};
             const order = Object.fromEntries(Object.entries(fields).map(([key, value]) => [key, decodeFirestoreField(value)]));
-            const amountDue = order.amountDue;
-            const currency = order.amountCurrency || 'GHS';
+            const configuredAmount = order.amountDue ?? order.paymentAmount ?? order.PaymentAmmount;
+            const amountDue = typeof configuredAmount === 'number' ? configuredAmount : Number(configuredAmount);
+            const currency = String(order.currency ?? order.amountCurrency ?? 'GHS').trim().toUpperCase();
             const email = order.customerEmail;
 
             if (order.orderNumber !== orderNumber) {
@@ -65,8 +66,8 @@ export default {
             if (typeof amountDue !== 'number' || !Number.isFinite(amountDue) || amountDue <= 0) {
                 return jsonResponse({ error: 'The atelier has not added an amount due yet.' }, 409, corsHeaders);
             }
-            if (currency !== 'GHS') {
-                return jsonResponse({ error: 'This checkout currently supports GHS only.' }, 400, corsHeaders);
+            if (!/^[A-Z]{3}$/.test(currency)) {
+                return jsonResponse({ error: 'The order has an invalid currency code.' }, 400, corsHeaders);
             }
             if (order.paymentStatus === 'Paid') {
                 return jsonResponse({ error: 'This order is already marked as paid.' }, 409, corsHeaders);
@@ -81,6 +82,7 @@ export default {
             const callbackUrl = new URL(env.PAYSTACK_CALLBACK_URL);
             callbackUrl.searchParams.set('order', orderNumber);
             const reference = `REMAG-${crypto.randomUUID()}`;
+            const fractionDigits = new Intl.NumberFormat('en', { style: 'currency', currency }).resolvedOptions().maximumFractionDigits;
             const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
                 method: 'POST',
                 headers: {
@@ -89,7 +91,7 @@ export default {
                 },
                 body: JSON.stringify({
                     email,
-                    amount: Math.round(amountDue * 100),
+                    amount: Math.round(amountDue * (10 ** fractionDigits)),
                     currency,
                     reference,
                     callback_url: callbackUrl.toString(),
