@@ -86,9 +86,8 @@
             padding: 28px 0;
             scrollbar-width: none;
             scrollbar-color: transparent transparent;
-            cursor: grab;
-            touch-action: pan-x;
-            -webkit-overflow-scrolling: touch;
+            cursor: default;
+            touch-action: pan-y;
             mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
             -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
         }
@@ -339,35 +338,8 @@
         const galleryTrack = galleryMarquee?.querySelector('.gallery-track');
 
         if (galleryMarquee && galleryTrack) {
-            let isDown = false;
-            let startX = 0;
-            let scrollLeft = 0;
-
-            galleryMarquee.addEventListener('pointerdown', (event) => {
-                isDown = true;
-                galleryMarquee.setPointerCapture(event.pointerId);
-                startX = event.clientX;
-                scrollLeft = galleryMarquee.scrollLeft;
-                galleryMarquee.style.cursor = 'grabbing';
-            });
-
-            galleryMarquee.addEventListener('pointermove', (event) => {
-                if (!isDown) return;
-                const walk = (event.clientX - startX) * 1.2;
-                galleryMarquee.scrollLeft = scrollLeft - walk;
-            });
-
-            const stopDrag = () => {
-                isDown = false;
-                galleryMarquee.style.cursor = 'grab';
-            };
-
-            galleryMarquee.addEventListener('pointerup', stopDrag);
-            galleryMarquee.addEventListener('pointerleave', stopDrag);
-            galleryMarquee.addEventListener('pointercancel', stopDrag);
-
             const scrollGallery = () => {
-                if (!isDown && galleryMarquee.scrollWidth > galleryMarquee.clientWidth) {
+                if (galleryMarquee.scrollWidth > galleryMarquee.clientWidth) {
                     const loopPoint = galleryTrack.scrollWidth / 2;
                     if (galleryMarquee.scrollLeft >= loopPoint) {
                         galleryMarquee.scrollLeft -= loopPoint;
