@@ -69,7 +69,7 @@ export default {
             if (!/^[A-Z]{3}$/.test(currency)) {
                 return jsonResponse({ error: 'The order has an invalid currency code.' }, 400, corsHeaders);
             }
-            if (order.paymentStatus === 'Paid') {
+            if (order.paymentStatus === 'Paid' || order.status === 'Paid') {
                 return jsonResponse({ error: 'This order is already marked as paid.' }, 409, corsHeaders);
             }
             if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {

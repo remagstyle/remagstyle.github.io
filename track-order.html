@@ -19,13 +19,14 @@
         const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
         const db = getFirestore(app); const form = document.getElementById('track-form'); const input = document.getElementById('order-number'); const result = document.getElementById('track-result');
         let liveOrderUnsubscribe = null;
+        const paymentWorkerUrl = 'https://remagstyle-paystack-worker.1realstranger.workers.dev';
         function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]); }
         function renderAmountDue(order, orderId) {
             const amountDue = Number(order.amountDue ?? order.paymentAmount ?? order.PaymentAmmount);
             const currency = String(order.currency ?? order.amountCurrency ?? 'GHS').trim().toUpperCase();
             const hasValidCurrency = /^[A-Z]{3}$/.test(currency);
             const hasAmountDue = Number.isFinite(amountDue) && amountDue > 0;
-            const isPaid = order.paymentStatus === 'Paid';
+            const isPaid = order.paymentStatus === 'Paid' || order.status === 'Paid';
             const canPay = hasAmountDue && hasValidCurrency && !isPaid;
             const amountLabel = hasAmountDue
                 ? hasValidCurrency
@@ -49,13 +50,15 @@
                 button.textContent = 'Opening Paystack...';
                 errorMessage.classList.add('hidden');
                 try {
-                    const response = await fetch('/api/payments/initialize', {
+                    const callbackUrl = new URL(window.location.href);
+                    callbackUrl.searchParams.set('order', order.orderNumber);
+                    const response = await fetch(`${paymentWorkerUrl}/initialize-payment`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderId, orderNumber: order.orderNumber })
+                        body: JSON.stringify({ orderId, callbackUrl: callbackUrl.toString() })
                     });
                     const checkout = await response.json();
-                    if (!response.ok || !checkout.authorizationUrl) {
+                    if (!response.ok || !checkout.ok || !checkout.authorizationUrl) {
                         throw new Error(checkout.error || 'We could not start payment. Please try again.');
                     }
                     window.location.assign(checkout.authorizationUrl);
@@ -103,8 +106,47 @@
                 });
             } catch (error) { result.innerHTML = '<p class="border border-red-200 bg-red-50 p-4 text-xs text-red-700">We could not look up your order right now.</p>'; console.error('Unable to track order:', error); }
         }
+        async function verifyPaymentReturn(reference, orderNumber) {
+            result.innerHTML = '<p class="text-center text-xs text-brand-muted">Verifying your payment...</p>';
+            try {
+                const snapshot = await getDocs(query(collection(db, 'orders'), where('orderNumber', '==', orderNumber)));
+                if (snapshot.empty) throw new Error('We could not find the order for this payment.');
+                const orderDocument = snapshot.docs[0];
+                const response = await fetch(`${paymentWorkerUrl}/verify-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reference, orderId: orderDocument.id })
+                });
+                const verification = await response.json();
+                if (!response.ok || !verification.ok) {
+                    throw new Error(verification.error || 'Payment verification failed.');
+                }
+
+                const cleanUrl = new URL(window.location.href);
+                cleanUrl.searchParams.delete('reference');
+                cleanUrl.searchParams.delete('trxref');
+                window.history.replaceState({}, document.title, `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+                await trackOrder(orderNumber);
+                const notice = document.createElement('p');
+                notice.className = 'mb-4 border border-green-200 bg-green-50 p-3 text-[11px] text-green-700';
+                notice.textContent = 'Payment verified successfully.';
+                result.prepend(notice);
+            } catch (error) {
+                await trackOrder(orderNumber);
+                const notice = document.createElement('p');
+                notice.className = 'mb-4 border border-red-200 bg-red-50 p-3 text-[11px] text-red-700';
+                notice.textContent = error.message || 'Payment verification failed. Please contact the atelier.';
+                result.prepend(notice);
+                console.error('Unable to verify Paystack payment:', error);
+            }
+        }
         form.addEventListener('submit', (event) => { event.preventDefault(); trackOrder(input.value.trim().toUpperCase()); });
-        const initialOrder = new URLSearchParams(window.location.search).get('order'); if (initialOrder) { input.value = initialOrder; trackOrder(initialOrder.toUpperCase()); }
+        const searchParams = new URLSearchParams(window.location.search);
+        const initialOrder = searchParams.get('order');
+        const paymentReference = searchParams.get('reference') || searchParams.get('trxref');
+        if (initialOrder) input.value = initialOrder;
+        if (paymentReference && initialOrder) verifyPaymentReturn(paymentReference, initialOrder.toUpperCase());
+        else if (initialOrder) trackOrder(initialOrder.toUpperCase());
     </script>
 </body>
 </html>
