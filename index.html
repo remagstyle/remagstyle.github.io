@@ -81,11 +81,11 @@
         #gallery-grid > div:nth-child(5) { animation-delay: 0.48s; }
         #gallery-grid > div:nth-child(6) { animation-delay: 0.6s; }
         .gallery-marquee {
-            overflow-x: auto;
-            overflow-y: hidden;
+            overflow: hidden;
             position: relative;
-            scrollbar-width: thin;
-            scrollbar-color: #D1CDC6 transparent;
+            padding: 28px 0;
+            scrollbar-width: none;
+            scrollbar-color: transparent transparent;
             cursor: grab;
             touch-action: pan-x;
             -webkit-overflow-scrolling: touch;
@@ -93,41 +93,57 @@
             -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
         }
         .gallery-marquee::-webkit-scrollbar {
-            height: 8px;
-        }
-        .gallery-marquee::-webkit-scrollbar-thumb {
-            background: #D1CDC6;
-            border-radius: 9999px;
+            display: none;
+            width: 0;
+            height: 0;
         }
         .gallery-track {
             display: flex;
+            align-items: center;
             width: max-content;
             min-width: 100%;
-            animation: gallery-slide 28s linear infinite;
         }
         .gallery-slide-item {
             flex: 0 0 auto;
-            width: min(85vw, 360px);
+            width: auto;
+            max-width: 294px;
             margin-right: 1rem;
+            background: transparent;
+            border: none;
+            overflow: visible;
+        }
+        .gallery-slide-item:nth-child(6n + 1) { transform: translateY(-17px) rotate(-2deg); }
+        .gallery-slide-item:nth-child(6n + 2) { transform: translateY(15px) rotate(2deg); }
+        .gallery-slide-item:nth-child(6n + 3) { transform: translateY(-5px) rotate(-1.5deg); }
+        .gallery-slide-item:nth-child(6n + 4) { transform: translateY(21px) rotate(2deg); }
+        .gallery-slide-item:nth-child(6n + 5) { transform: translateY(-12px) rotate(-2deg); }
+        .gallery-slide-item:nth-child(6n) { transform: translateY(8px) rotate(1.5deg); }
+        .gallery-slide-item img {
+            display: block;
+            width: auto;
+            max-height: 308px;
+            height: auto;
+            object-fit: cover;
+            border-radius: 10px;
+            box-shadow: 0 8px 18px rgba(17, 17, 17, 0.18);
         }
         @media (max-width: 640px) {
             .gallery-slide-item {
-                width: min(54vw, 180px);
-                margin-right: 0.45rem;
+                max-width: 154px;
+                margin-right: 0.55rem;
             }
-            .gallery-slide-item .aspect-square {
-                aspect-ratio: 3 / 4;
+            .gallery-slide-item img {
+                max-height: 196px;
             }
-            .gallery-slide-item .p-4 {
-                padding: 0.6rem;
-            }
+            .gallery-slide-item:nth-child(6n + 1) { transform: translateY(-12px) rotate(-1.7deg); }
+            .gallery-slide-item:nth-child(6n + 2) { transform: translateY(11px) rotate(1.7deg); }
+            .gallery-slide-item:nth-child(6n + 3) { transform: translateY(-4px) rotate(-1.3deg); }
+            .gallery-slide-item:nth-child(6n + 4) { transform: translateY(15px) rotate(1.7deg); }
+            .gallery-slide-item:nth-child(6n + 5) { transform: translateY(-8px) rotate(-1.7deg); }
+            .gallery-slide-item:nth-child(6n) { transform: translateY(6px) rotate(1.3deg); }
             .gallery-marquee {
-                padding-bottom: 4px;
+                padding: 22px 0;
             }
-        }
-        @keyframes gallery-slide {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
         }
         #footer > div { animation: footer-fade 1.1s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
         @media (prefers-reduced-motion: reduce) {
@@ -242,307 +258,18 @@
 
             <div id="gallery-grid" class="gallery-marquee" aria-label="Gallery carousel">
                 <div class="gallery-track">
-                    <div class="gallery-slide-item w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
-                        <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
-                                <div>
-                                    <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
-                            <img 
-                                src="image/1.jpg" 
-                                loading="lazy"
-                                decoding="async"
-                                alt="REMAGSTYLE Atelier Creation" 
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                onerror="this.src=''"
-                            />
-                        </div>
-
-                        <div class="p-4 bg-white border-t border-brand-border/40">
-                            <p class="text-[11px] text-brand-text font-medium tracking-wide">Signature Couture Design</p>
-                        </div>
-                    </div>
-
-                    <div class="gallery-slide-item w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
-                        <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
-                                <div>
-                                    <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
-                            <img 
-                                src="image/2.jpg" 
-                                loading="lazy"
-                                decoding="async"
-                                alt="REMAGSTYLE Custom Suit" 
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                        </div>
-
-                        <div class="p-4 bg-white border-t border-brand-border/40">
-                            <p class="text-[11px] text-brand-text font-medium tracking-wide">Custom Bespoke Tailoring</p>
-                        </div>
-                    </div>
-
-                    <div class="gallery-slide-item w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
-                        <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
-                                <div>
-                                    <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
-                            <img
-                                src="image/3.jpg"
-                                loading="lazy"
-                                decoding="async"
-                                alt="REMAGSTYLE Contemporary Design"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                        </div>
-
-                        <div class="p-4 bg-white border-t border-brand-border/40">
-                            <p class="text-[11px] text-brand-text font-medium tracking-wide">Contemporary Couture</p>
-                        </div>
-                    </div>
-
-                    <div class="gallery-slide-item w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
-                        <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
-                                <div>
-                                    <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
-                            <img
-                                src="image/4.jpg"
-                                loading="lazy"
-                                decoding="async"
-                                alt="REMAGSTYLE Signature Look"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                        </div>
-
-                        <div class="p-4 bg-white border-t border-brand-border/40">
-                            <p class="text-[11px] text-brand-text font-medium tracking-wide">Signature Look</p>
-                        </div>
-                    </div>
-
-                    <div class="gallery-slide-item w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
-                        <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
-                                <div>
-                                    <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
-                            <img
-                                src="image/5.jpg"
-                                loading="lazy"
-                                decoding="async"
-                                alt="REMAGSTYLE Bespoke Creation"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                        </div>
-
-                        <div class="p-4 bg-white border-t border-brand-border/40">
-                            <p class="text-[11px] text-brand-text font-medium tracking-wide">Bespoke Atelier Look</p>
-                        </div>
-                    </div>
-
-                    <div class="gallery-slide-item w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
-                        <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
-                                <div>
-                                    <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
-                            <img
-                                src="image/6.jpg"
-                                loading="lazy"
-                                decoding="async"
-                                alt="REMAGSTYLE Evening Design"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                        </div>
-
-                        <div class="p-4 bg-white border-t border-brand-border/40">
-                            <p class="text-[11px] text-brand-text font-medium tracking-wide">Modern Evening Couture</p>
-                        </div>
-                    </div>
-
-                    <div class="gallery-slide-item w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
-                        <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
-                                <div>
-                                    <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
-                            <img 
-                                src="image/1.jpg" 
-                                loading="lazy"
-                                decoding="async"
-                                alt="REMAGSTYLE Atelier Creation" 
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                onerror="this.src=''"
-                            />
-                        </div>
-
-                        <div class="p-4 bg-white border-t border-brand-border/40">
-                            <p class="text-[11px] text-brand-text font-medium tracking-wide">Signature Couture Design</p>
-                        </div>
-                    </div>
-
-                    <div class="gallery-slide-item w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
-                        <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
-                                <div>
-                                    <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
-                            <img 
-                                src="image/2.jpg" 
-                                loading="lazy"
-                                decoding="async"
-                                alt="REMAGSTYLE Custom Suit" 
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                        </div>
-
-                        <div class="p-4 bg-white border-t border-brand-border/40">
-                            <p class="text-[11px] text-brand-text font-medium tracking-wide">Custom Bespoke Tailoring</p>
-                        </div>
-                    </div>
-
-                    <div class="gallery-slide-item w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
-                        <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
-                                <div>
-                                    <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
-                            <img
-                                src="image/3.jpg"
-                                loading="lazy"
-                                decoding="async"
-                                alt="REMAGSTYLE Contemporary Design"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                        </div>
-
-                        <div class="p-4 bg-white border-t border-brand-border/40">
-                            <p class="text-[11px] text-brand-text font-medium tracking-wide">Contemporary Couture</p>
-                        </div>
-                    </div>
-
-                    <div class="gallery-slide-item w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
-                        <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
-                                <div>
-                                    <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
-                            <img
-                                src="image/4.jpg"
-                                loading="lazy"
-                                decoding="async"
-                                alt="REMAGSTYLE Signature Look"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                        </div>
-
-                        <div class="p-4 bg-white border-t border-brand-border/40">
-                            <p class="text-[11px] text-brand-text font-medium tracking-wide">Signature Look</p>
-                        </div>
-                    </div>
-
-                    <div class="gallery-slide-item w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
-                        <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
-                                <div>
-                                    <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
-                            <img
-                                src="image/5.jpg"
-                                loading="lazy"
-                                decoding="async"
-                                alt="REMAGSTYLE Bespoke Creation"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                        </div>
-
-                        <div class="p-4 bg-white border-t border-brand-border/40">
-                            <p class="text-[11px] text-brand-text font-medium tracking-wide">Bespoke Atelier Look</p>
-                        </div>
-                    </div>
-
-                    <div class="gallery-slide-item w-full max-w-[380px] bg-white border border-brand-border overflow-hidden flex flex-col group transition-all duration-300 hover:shadow-lg">
-                        <div class="p-4 flex items-center justify-between border-b border-brand-border/40 bg-brand-bg/50">
-                            <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-brand-text flex items-center justify-center overflow-hidden"><img src="image/Logo.png" alt="REMAGSTYLE" class="h-full w-full object-contain" /></div>
-                                <div>
-                                    <p class="text-[11px] font-medium tracking-wider uppercase text-brand-text">REMAGSTYLE</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative aspect-square overflow-hidden bg-[#EFECE6]">
-                            <img
-                                src="image/6.jpg"
-                                loading="lazy"
-                                decoding="async"
-                                alt="REMAGSTYLE Evening Design"
-                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                        </div>
-
-                        <div class="p-4 bg-white border-t border-brand-border/40">
-                            <p class="text-[11px] text-brand-text font-medium tracking-wide">Modern Evening Couture</p>
-                        </div>
-                    </div>
+                    <div class="gallery-slide-item"><img src="image/1.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Atelier Creation" /></div>
+                    <div class="gallery-slide-item"><img src="image/2.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Custom Suit" /></div>
+                    <div class="gallery-slide-item"><img src="image/3.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Contemporary Design" /></div>
+                    <div class="gallery-slide-item"><img src="image/4.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Signature Look" /></div>
+                    <div class="gallery-slide-item"><img src="image/5.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Bespoke Creation" /></div>
+                    <div class="gallery-slide-item"><img src="image/6.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Evening Design" /></div>
+                    <div class="gallery-slide-item"><img src="image/1.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Atelier Creation" /></div>
+                    <div class="gallery-slide-item"><img src="image/2.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Custom Suit" /></div>
+                    <div class="gallery-slide-item"><img src="image/3.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Contemporary Design" /></div>
+                    <div class="gallery-slide-item"><img src="image/4.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Signature Look" /></div>
+                    <div class="gallery-slide-item"><img src="image/5.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Bespoke Creation" /></div>
+                    <div class="gallery-slide-item"><img src="image/6.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Evening Design" /></div>
                 </div>
             </div>
 
@@ -641,14 +368,15 @@
 
             const scrollGallery = () => {
                 if (!isDown && galleryMarquee.scrollWidth > galleryMarquee.clientWidth) {
-                    galleryMarquee.scrollLeft += 1;
-                    if (galleryMarquee.scrollLeft >= galleryMarquee.scrollWidth - galleryMarquee.clientWidth) {
-                        galleryMarquee.scrollLeft = 0;
+                    const loopPoint = galleryTrack.scrollWidth / 2;
+                    if (galleryMarquee.scrollLeft >= loopPoint) {
+                        galleryMarquee.scrollLeft -= loopPoint;
                     }
+                    galleryMarquee.scrollLeft += 0.55;
                 }
             };
 
-            setInterval(scrollGallery, 20);
+            setInterval(scrollGallery, 30);
         }
     </script>
 
