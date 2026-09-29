@@ -15,11 +15,58 @@
     <main class="mx-auto max-w-2xl px-5 py-16 sm:px-8 sm:py-24"><div class="mb-8 text-center"><p class="text-[10px] font-medium uppercase tracking-[0.25em] text-brand-muted">Order Tracking</p><h1 class="mt-2 font-serif text-5xl font-light">Find your order</h1><p class="mx-auto mt-3 max-w-md text-xs leading-6 text-brand-muted">Enter the special order number from your confirmation. Account and guest orders use the same tracking form.</p></div><form id="track-form" class="flex flex-col gap-3 sm:flex-row"><input id="order-number" required placeholder="RS-2026-XXXXXXXX" class="min-w-0 flex-1 border border-brand-border bg-white px-4 py-3 text-xs uppercase tracking-[0.12em] focus:border-brand-text focus:outline-none"><button class="bg-brand-text px-6 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-white hover:bg-black/80">Track Order</button></form><div id="track-result" class="mt-8"></div></main>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs, updateDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, updateDoc, doc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
         const db = getFirestore(app); const form = document.getElementById('track-form'); const input = document.getElementById('order-number'); const result = document.getElementById('track-result');
+        let liveOrderUnsubscribe = null;
         function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]); }
+        function renderAmountDue(order, orderId) {
+            const amountDue = Number(order.amountDue);
+            const hasAmountDue = Number.isFinite(amountDue) && amountDue > 0;
+            const isPaid = order.paymentStatus === 'Paid';
+            const canPay = hasAmountDue && !isPaid;
+            const amountLabel = hasAmountDue
+                ? new Intl.NumberFormat('en-GH', { style: 'currency', currency: 'GHS' }).format(amountDue)
+                : 'Pending';
+            const section = document.createElement('section');
+            section.id = 'amount-due-section';
+            section.className = 'mt-6 border-t border-brand-border pt-5';
+            section.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-4"><div><p class="text-[10px] uppercase tracking-[0.18em] text-brand-muted">Amount to be paid</p><p class="mt-1 font-serif text-2xl text-brand-text">${escapeHtml(amountLabel)}</p></div><span class="border border-brand-border px-3 py-2 text-[10px] uppercase tracking-[0.15em] text-brand-muted">${isPaid ? 'Paid' : hasAmountDue ? 'Awaiting payment' : 'Pending'}</span></div><button id="pay-now-button" type="button" ${canPay ? '' : 'disabled'} class="mt-4 w-full px-5 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-white ${canPay ? 'bg-brand-text hover:bg-black/80' : 'cursor-not-allowed bg-gray-300 text-gray-600'}">${isPaid ? 'Paid' : 'Pay Now'}</button><p id="payment-error" class="mt-3 hidden border border-red-200 bg-red-50 p-3 text-[11px] text-red-700" role="status"></p>`;
+            const article = result.querySelector('article');
+            const existingSection = article?.querySelector('#amount-due-section');
+            if (existingSection) existingSection.replaceWith(section);
+            else article?.append(section);
+
+            section.querySelector('#pay-now-button').addEventListener('click', async (event) => {
+                if (!canPay) return;
+                const button = event.currentTarget;
+                const errorMessage = section.querySelector('#payment-error');
+                button.disabled = true;
+                button.textContent = 'Opening Paystack...';
+                errorMessage.classList.add('hidden');
+                try {
+                    const response = await fetch('/api/payments/initialize', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ orderId, orderNumber: order.orderNumber })
+                    });
+                    const checkout = await response.json();
+                    if (!response.ok || !checkout.authorizationUrl) {
+                        throw new Error(checkout.error || 'We could not start payment. Please try again.');
+                    }
+                    window.location.assign(checkout.authorizationUrl);
+                } catch (error) {
+                    button.disabled = false;
+                    button.textContent = 'Pay Now';
+                    errorMessage.textContent = error.message || 'We could not start payment. Please try again.';
+                    errorMessage.classList.remove('hidden');
+                    console.error('Unable to start Paystack checkout:', error);
+                }
+            });
+        }
         async function trackOrder(orderNumber) {
+            liveOrderUnsubscribe?.();
+            liveOrderUnsubscribe = null;
             result.innerHTML = '<p class="text-center text-xs text-brand-muted">Looking up your order...</p>';
             try {
                 const snapshot = await getDocs(query(collection(db, 'orders'), where('orderNumber', '==', orderNumber)));
@@ -28,6 +75,10 @@
                 const order = orderDocument.data();
                 const date = order.createdAt?.toDate?.().toLocaleDateString() || 'Just submitted';
                 result.innerHTML = `<article class="border border-brand-border bg-white p-6"><div class="flex flex-wrap items-start justify-between gap-4"><div><p class="text-[10px] uppercase tracking-[0.2em] text-brand-muted">${escapeHtml(order.orderNumber)}</p><h2 class="mt-2 font-serif text-3xl">${escapeHtml(order.garment)}</h2><p class="mt-1 text-xs text-brand-muted">${escapeHtml(order.occasion)}</p></div><span class="border border-brand-border px-3 py-2 text-[10px] uppercase tracking-[0.15em]">${escapeHtml(order.status)}</span></div><div class="mt-6 grid grid-cols-2 gap-4 border-t border-brand-border pt-4 text-xs text-brand-muted"><p>Submitted<br><span class="text-brand-text">${escapeHtml(date)}</span></p><p>Delivery<br><span class="text-brand-text">${escapeHtml(order.deliveryStatus)}</span></p></div>${order.adminMessage ? `<div class="mt-5 border-l-2 border-brand-text bg-brand-bg px-3 py-2 text-[11px] leading-5 text-brand-text"><span class="font-medium uppercase tracking-[0.12em]">Atelier update</span><br>${escapeHtml(order.adminMessage)}</div><form id="guest-reply-form" class="mt-4 flex flex-col gap-2 sm:flex-row"><input name="clientReply" required maxlength="1000" placeholder="Reply to the atelier" class="min-w-0 flex-1 border border-brand-border bg-brand-bg px-3 py-2.5 text-[11px] focus:border-brand-text focus:outline-none"><button type="submit" class="bg-brand-text px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.15em] text-white hover:bg-black/80">Send reply</button></form>` : ''}${order.clientReply ? `<div class="mt-3 border-l-2 border-brand-border px-3 py-2 text-[11px] leading-5 text-brand-muted"><span class="font-medium uppercase tracking-[0.12em] text-brand-text">Your reply</span><br>${escapeHtml(order.clientReply)}</div>` : ''}</article>`;
+                renderAmountDue(order, orderDocument.id);
+                liveOrderUnsubscribe = onSnapshot(doc(db, 'orders', orderDocument.id), (snapshot) => {
+                    if (snapshot.exists()) renderAmountDue(snapshot.data(), snapshot.id);
+                }, (error) => console.error('Unable to listen for order payment updates:', error));
                 const replyForm = document.getElementById('guest-reply-form');
                 replyForm?.addEventListener('submit', async (event) => {
                     event.preventDefault();
