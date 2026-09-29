@@ -323,6 +323,7 @@
                         userId,
                         customerName: draft.customerName,
                         customerPhone: draft.customerPhone,
+                        customerEmail: draft.customerEmail,
                         gender: draft.gender,
                         garment: draft.garment,
                         occasion: draft.occasion,
@@ -335,7 +336,6 @@
                         deliveryStatus: 'To be confirmed',
                         createdAt: serverTimestamp()
                     };
-                    if (auth.currentUser?.email) order.customerEmail = auth.currentUser.email;
                     await addDoc(collection(db, 'orders'), order);
                     sessionStorage.removeItem('remagstyle-order-draft');
                     message.innerHTML = `Your order has been submitted. Your order number is <strong>${orderNumber}</strong>. <a class="underline" href="track-order.html?order=${orderNumber}">Track this order</a>`;

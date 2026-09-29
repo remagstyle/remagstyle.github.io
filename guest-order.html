@@ -35,6 +35,7 @@
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div><label for="guest-name" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Full name</label><input id="guest-name" required class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none"></div>
                     <div><label for="guest-phone" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Phone number</label><input type="tel" id="guest-phone" required autocomplete="tel" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none"></div>
+                    <div><label for="guest-email" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Email</label><input type="email" id="guest-email" required autocomplete="email" placeholder="name@example.com" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none"></div>
                 </div>
                 <div><label for="guest-gender" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Gender</label><select id="guest-gender" required class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none"><option value="">Select gender</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select></div>
                 <button type="button" id="guest-next-btn" class="w-full border border-[#111111] bg-[#111111] py-3.5 text-[10px] font-medium uppercase tracking-[0.2em] text-white transition-colors hover:bg-black/80">Next</button>
@@ -88,7 +89,7 @@
         stepTwoFields.forEach((field) => { field.disabled = true; });
 
         document.getElementById('guest-next-btn').addEventListener('click', () => {
-            if (!document.getElementById('guest-name').reportValidity() || !document.getElementById('guest-phone').reportValidity() || !gender.reportValidity()) return;
+            if (!document.getElementById('guest-name').reportValidity() || !document.getElementById('guest-phone').reportValidity() || !document.getElementById('guest-email').reportValidity() || !gender.reportValidity()) return;
             updateGarmentOptions();
             stepTwoFields.forEach((field) => { field.disabled = false; });
             stepOne.classList.add('hidden');
@@ -110,6 +111,7 @@
                 sessionStorage.setItem('remagstyle-order-draft', JSON.stringify({
                     customerName: document.getElementById('guest-name').value.trim(),
                     customerPhone: document.getElementById('guest-phone').value.trim(),
+                    customerEmail: document.getElementById('guest-email').value.trim(),
                     gender: gender.value,
                     garment: garment.value,
                     occasion: document.getElementById('order-occasion').value.trim(),
@@ -138,6 +140,7 @@
                     userId,
                     customerName: document.getElementById('guest-name').value.trim(),
                     customerPhone: document.getElementById('guest-phone').value.trim(),
+                    customerEmail: document.getElementById('guest-email').value.trim(),
                     gender: gender.value,
                     garment: garment.value,
                     occasion: document.getElementById('order-occasion').value.trim(),
@@ -148,7 +151,6 @@
                     deliveryStatus: 'To be confirmed',
                     createdAt: serverTimestamp()
                 };
-                if (auth.currentUser?.email) order.customerEmail = auth.currentUser.email;
                 await addDoc(collection(db, 'orders'), order);
                 form.reset();
                 updateGarmentOptions();

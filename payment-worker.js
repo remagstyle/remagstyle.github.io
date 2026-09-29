@@ -58,7 +58,7 @@ export default {
             const configuredAmount = order.amountDue ?? order.paymentAmount ?? order.PaymentAmmount;
             const amountDue = typeof configuredAmount === 'number' ? configuredAmount : Number(configuredAmount);
             const currency = String(order.currency ?? order.amountCurrency ?? 'GHS').trim().toUpperCase();
-            const email = order.customerEmail;
+            const email = typeof order.customerEmail === 'string' ? order.customerEmail.trim() : '';
 
             if (order.orderNumber !== orderNumber) {
                 return jsonResponse({ error: 'Order reference does not match.' }, 400, corsHeaders);
