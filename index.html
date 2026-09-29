@@ -667,14 +667,23 @@
         accountOverlay.addEventListener('click', closeAccount);
 
         // Tabs
+        const setActiveAuthTab = (activeButton, inactiveButton) => {
+            activeButton.classList.add('border-brand-text', 'text-brand-text');
+            activeButton.classList.remove('border-transparent', 'text-brand-muted');
+            inactiveButton.classList.add('border-transparent', 'text-brand-muted');
+            inactiveButton.classList.remove('border-brand-text', 'text-brand-text');
+        };
+
         tabSigninBtn.addEventListener('click', () => {
             signinForm.classList.remove('hidden');
             signupForm.classList.add('hidden');
+            setActiveAuthTab(tabSigninBtn, tabSignupBtn);
         });
 
         tabSignupBtn.addEventListener('click', () => {
             signupForm.classList.remove('hidden');
             signinForm.classList.add('hidden');
+            setActiveAuthTab(tabSignupBtn, tabSigninBtn);
         });
 
         // Sign Up
