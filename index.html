@@ -110,6 +110,21 @@
             width: min(85vw, 360px);
             margin-right: 1rem;
         }
+        @media (max-width: 640px) {
+            .gallery-slide-item {
+                width: min(54vw, 180px);
+                margin-right: 0.45rem;
+            }
+            .gallery-slide-item .aspect-square {
+                aspect-ratio: 3 / 4;
+            }
+            .gallery-slide-item .p-4 {
+                padding: 0.6rem;
+            }
+            .gallery-marquee {
+                padding-bottom: 4px;
+            }
+        }
         @keyframes gallery-slide {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
