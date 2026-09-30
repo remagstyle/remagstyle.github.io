@@ -15,7 +15,7 @@
     <main class="mx-auto max-w-2xl px-5 py-16 sm:px-8 sm:py-24"><div class="mb-8 text-center"><p class="text-[10px] font-medium uppercase tracking-[0.25em] text-brand-muted">Order Tracking</p><h1 class="mt-2 font-serif text-5xl font-light">Find your order</h1><p class="mx-auto mt-3 max-w-md text-xs leading-6 text-brand-muted">Enter the special order number from your confirmation. Account and guest orders use the same tracking form.</p></div><form id="track-form" class="flex flex-col gap-3 sm:flex-row"><input id="order-number" required placeholder="RS-2026-XXXXXXXX" class="min-w-0 flex-1 border border-brand-border bg-white px-4 py-3 text-xs uppercase tracking-[0.12em] focus:border-brand-text focus:outline-none"><button class="bg-brand-text px-6 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-white hover:bg-black/80">Track Order</button></form><div id="track-result" class="mt-8"></div></main>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { getFirestore, collection, query, where, getDocs, updateDoc, doc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { getFirestore, getDoc, updateDoc, doc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
         const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
         const auth = getAuth(app); const db = getFirestore(app); const form = document.getElementById('track-form'); const input = document.getElementById('order-number'); const result = document.getElementById('track-result');
@@ -114,10 +114,21 @@
             liveOrderUnsubscribe = null;
             result.innerHTML = '<p class="text-center text-xs text-brand-muted">Looking up your order...</p>';
             try {
-                const snapshot = await getDocs(query(collection(db, 'orders'), where('orderNumber', '==', orderNumber)));
-                if (snapshot.empty) { result.innerHTML = '<p class="border border-red-200 bg-red-50 p-4 text-xs text-red-700">No order was found with that number. Check it and try again.</p>'; return; }
-                const orderDocument = snapshot.docs[0];
-                const order = orderDocument.data();
+                const notFound = '<p class="border border-red-200 bg-red-50 p-4 text-xs text-red-700">No order was found with that number. Check it and try again.</p>';
+                // The server turns an order number into the order's private id. Orders can no longer be listed by the public.
+                const lookupResponse = await fetch(`${paymentWorkerUrl}/lookup-order`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderNumber })
+                });
+                const lookup = await lookupResponse.json().catch(() => ({}));
+                if (lookupResponse.status === 404 || lookupResponse.status === 400) { result.innerHTML = notFound; return; }
+                if (lookupResponse.status === 429) { result.innerHTML = '<p class="border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800">Too many attempts. Please wait a minute and try again.</p>'; return; }
+                if (!lookupResponse.ok || !lookup.orderId) throw new Error('Order lookup failed.');
+                const orderSnapshot = await getDoc(doc(db, 'orders', lookup.orderId));
+                if (!orderSnapshot.exists()) { result.innerHTML = notFound; return; }
+                const orderDocument = { id: orderSnapshot.id };
+                const order = orderSnapshot.data();
                 const date = order.createdAt?.toDate?.().toLocaleDateString() || 'Just submitted';
                 result.innerHTML = `<article class="border border-brand-border bg-white p-6"><div class="flex flex-wrap items-start justify-between gap-4"><div><p class="text-[10px] uppercase tracking-[0.2em] text-brand-muted">${escapeHtml(order.orderNumber)}</p><h2 class="mt-2 font-serif text-3xl">${escapeHtml(order.garment)}</h2><p class="mt-1 text-xs text-brand-muted">${escapeHtml(order.occasion)}</p></div><span class="border border-brand-border px-3 py-2 text-[10px] uppercase tracking-[0.15em]">${escapeHtml(order.status)}</span></div><div class="mt-6 grid grid-cols-2 gap-4 border-t border-brand-border pt-4 text-xs text-brand-muted"><p>Submitted<br><span class="text-brand-text">${escapeHtml(date)}</span></p><p>Delivery<br><span class="text-brand-text">${escapeHtml(order.deliveryStatus)}</span></p></div>${order.adminMessage ? `<div class="mt-5 border-l-2 border-brand-text bg-brand-bg px-3 py-2 text-[11px] leading-5 text-brand-text"><span class="font-medium uppercase tracking-[0.12em]">Atelier update</span><br>${escapeHtml(order.adminMessage)}</div><form id="guest-reply-form" class="mt-4 flex flex-col gap-2 sm:flex-row"><input name="clientReply" required maxlength="1000" placeholder="Reply to the atelier" class="min-w-0 flex-1 border border-brand-border bg-brand-bg px-3 py-2.5 text-[11px] focus:border-brand-text focus:outline-none"><button type="submit" class="bg-brand-text px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.15em] text-white hover:bg-black/80">Send reply</button></form>` : ''}${order.clientReply ? `<div class="mt-3 border-l-2 border-brand-border px-3 py-2 text-[11px] leading-5 text-brand-muted"><span class="font-medium uppercase tracking-[0.12em] text-brand-text">Your reply</span><br>${escapeHtml(order.clientReply)}</div>` : ''}</article>`;
                 renderAmountDue(order, orderDocument.id);
