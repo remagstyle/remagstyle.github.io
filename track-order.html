@@ -16,57 +16,95 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
         import { getFirestore, collection, query, where, getDocs, updateDoc, doc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
         const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
-        const db = getFirestore(app); const form = document.getElementById('track-form'); const input = document.getElementById('order-number'); const result = document.getElementById('track-result');
+        const auth = getAuth(app); const db = getFirestore(app); const form = document.getElementById('track-form'); const input = document.getElementById('order-number'); const result = document.getElementById('track-result');
         let liveOrderUnsubscribe = null;
         const paymentWorkerUrl = 'https://remagstyle-paystack-worker.1realstranger.workers.dev';
         function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]); }
+        const PAID_WORDS = ['paid', 'success', 'successful', 'confirmed'];
+        let guestEmail = '';
+        function showNotice(kind, message) {
+            const styles = { success: 'border-green-200 bg-green-50 text-green-700', info: 'border-amber-200 bg-amber-50 text-amber-800', error: 'border-red-200 bg-red-50 text-red-700' };
+            const notice = document.createElement('p');
+            notice.className = `mb-4 border p-3 text-[11px] ${styles[kind] || styles.info}`;
+            notice.setAttribute('role', 'status');
+            notice.textContent = message;
+            result.prepend(notice);
+        }
         function renderAmountDue(order, orderId) {
-            const amountDue = Number(order.amountDue ?? order.paymentAmount ?? order.PaymentAmmount);
-            const currency = String(order.currency ?? order.amountCurrency ?? 'GHS').trim().toUpperCase();
+            // The amount shown here is the same order field the payment server charges: paymentAmount.
+            const amountDue = Number(order.paymentAmount);
+            const currency = String(order.currency || 'GHS').trim().toUpperCase();
             const hasValidCurrency = /^[A-Z]{3}$/.test(currency);
             const hasAmountDue = Number.isFinite(amountDue) && amountDue > 0;
-            const isPaid = order.paymentStatus === 'Paid' || order.status === 'Paid';
-            const canPay = hasAmountDue && hasValidCurrency && !isPaid;
-            const amountLabel = hasAmountDue
-                ? hasValidCurrency
-                    ? new Intl.NumberFormat('en-GH', { style: 'currency', currency }).format(amountDue)
-                    : `${amountDue.toFixed(2)} ${currency || 'currency pending'}`
-                : 'Pending';
-            const section = document.createElement('section');
-            section.id = 'amount-due-section';
-            section.className = 'mt-6 border-t border-brand-border pt-5';
-            section.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-4"><div><p class="text-[10px] uppercase tracking-[0.18em] text-brand-muted">Amount to be paid</p><p class="mt-1 font-serif text-2xl text-brand-text">${escapeHtml(amountLabel)}</p></div><span class="border border-brand-border px-3 py-2 text-[10px] uppercase tracking-[0.15em] text-brand-muted">${isPaid ? 'Paid' : hasAmountDue ? 'Awaiting payment' : 'Pending'}</span></div><button id="pay-now-button" type="button" ${canPay ? '' : 'disabled'} class="mt-4 w-full px-5 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-white ${canPay ? 'bg-brand-text hover:bg-black/80' : 'cursor-not-allowed bg-gray-300 text-gray-600'}">${isPaid ? 'Paid' : 'Pay Now'}</button><p id="payment-error" class="mt-3 hidden border border-red-200 bg-red-50 p-3 text-[11px] text-red-700" role="status"></p>`;
+            const isPaid = PAID_WORDS.includes(String(order.paymentStatus || '').toLowerCase());
+            const isCancelled = ['cancelled', 'canceled'].includes(String(order.status || '').toLowerCase());
+            const canPay = hasAmountDue && hasValidCurrency && !isPaid && !isCancelled;
+            const needsEmail = canPay && !order.userId;
+            const money = (value, code) => { try { return new Intl.NumberFormat('en-GH', { style: 'currency', currency: code }).format(value); } catch { return `${Number(value).toFixed(2)} ${code}`; } };
+            const amountLabel = hasAmountDue ? (hasValidCurrency ? money(amountDue, currency) : `${amountDue.toFixed(2)} ${currency}`) : 'Pending';
+            const paidDate = order.paidAt ? new Date(order.paidAt) : null;
+            const paidLine = isPaid && Number.isFinite(Number(order.paidAmount))
+                ? `Received ${money(Number(order.paidAmount), String(order.paidCurrency || currency).toUpperCase())}${paidDate && !Number.isNaN(paidDate.getTime()) ? ` on ${paidDate.toLocaleDateString()}` : ''}`
+                : '';
+            const badge = isPaid ? 'Paid' : isCancelled ? 'Cancelled' : hasAmountDue ? 'Awaiting payment' : 'Pending';
+
             const article = result.querySelector('article');
             const existingSection = article?.querySelector('#amount-due-section');
+            // Only redraw when something payment-related changed, so typing in the email box is never interrupted.
+            const renderKey = [order.paymentAmount, currency, isPaid, isCancelled, needsEmail, order.paidAt, order.paidAmount].join('|');
+            if (existingSection && existingSection.dataset.renderKey === renderKey) return;
+
+            const section = document.createElement('section');
+            section.id = 'amount-due-section';
+            section.dataset.renderKey = renderKey;
+            section.className = 'mt-6 border-t border-brand-border pt-5';
+            section.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-4"><div><p class="text-[10px] uppercase tracking-[0.18em] text-brand-muted">Amount to be paid</p><p class="mt-1 font-serif text-2xl text-brand-text">${escapeHtml(amountLabel)}</p>${paidLine ? `<p class="mt-1 text-[11px] text-brand-muted">${escapeHtml(paidLine)}</p>` : ''}</div><span class="border border-brand-border px-3 py-2 text-[10px] uppercase tracking-[0.15em] text-brand-muted">${escapeHtml(badge)}</span></div>${needsEmail ? `<label class="mt-4 block text-[10px] uppercase tracking-[0.18em] text-brand-muted">Email for your payment receipt<input id="pay-email" type="email" autocomplete="email" maxlength="254" value="${escapeHtml(guestEmail)}" placeholder="you@example.com" class="mt-2 w-full border border-brand-border bg-brand-bg px-3 py-2.5 text-[11px] normal-case tracking-normal text-brand-text focus:border-brand-text focus:outline-none"></label>` : ''}<button id="pay-now-button" type="button" ${canPay ? '' : 'disabled'} class="mt-4 w-full px-5 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-white ${canPay ? 'bg-brand-text hover:bg-black/80' : 'cursor-not-allowed bg-gray-300 text-gray-600'}">${isPaid ? 'Paid' : isCancelled ? 'Cancelled' : 'Pay Now'}</button><p id="payment-error" class="mt-3 hidden border border-red-200 bg-red-50 p-3 text-[11px] text-red-700" role="status"></p>`;
             if (existingSection) existingSection.replaceWith(section);
             else article?.append(section);
+
+            const emailInput = section.querySelector('#pay-email');
+            emailInput?.addEventListener('input', () => { guestEmail = emailInput.value; });
 
             section.querySelector('#pay-now-button').addEventListener('click', async (event) => {
                 if (!canPay) return;
                 const button = event.currentTarget;
                 const errorMessage = section.querySelector('#payment-error');
+                const fail = (message) => { errorMessage.textContent = message; errorMessage.classList.remove('hidden'); };
+                errorMessage.classList.add('hidden');
+
+                let email = '';
+                if (emailInput) {
+                    email = emailInput.value.trim();
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { fail('Please enter a valid email address.'); emailInput.focus(); return; }
+                }
+
                 button.disabled = true;
                 button.textContent = 'Opening Paystack...';
-                errorMessage.classList.add('hidden');
                 try {
-                    const callbackUrl = new URL(window.location.href);
-                    callbackUrl.searchParams.set('order', order.orderNumber);
+                    // Only the order id (and a guest's email) is sent. The amount is decided by the server from Firestore.
+                    const headers = { 'Content-Type': 'application/json' };
+                    await auth.authStateReady();
+                    if (auth.currentUser) headers.Authorization = `Bearer ${await auth.currentUser.getIdToken()}`;
                     const response = await fetch(`${paymentWorkerUrl}/initialize-payment`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ orderId, callbackUrl: callbackUrl.toString() })
+                        headers,
+                        body: JSON.stringify(email ? { orderId, email } : { orderId })
                     });
-                    const checkout = await response.json();
+                    const checkout = await response.json().catch(() => ({}));
                     if (!response.ok || !checkout.ok || !checkout.authorizationUrl) {
                         throw new Error(checkout.error || 'We could not start payment. Please try again.');
                     }
-                    window.location.assign(checkout.authorizationUrl);
+                    const destination = new URL(checkout.authorizationUrl);
+                    if (destination.protocol !== 'https:' || !destination.hostname.endsWith('paystack.com')) {
+                        throw new Error('We could not start payment. Please try again.');
+                    }
+                    window.location.assign(destination.toString());
                 } catch (error) {
                     button.disabled = false;
                     button.textContent = 'Pay Now';
-                    errorMessage.textContent = error.message || 'We could not start payment. Please try again.';
-                    errorMessage.classList.remove('hidden');
+                    fail(error.message || 'We could not start payment. Please try again.');
                     console.error('Unable to start Paystack checkout:', error);
                 }
             });
@@ -106,47 +144,58 @@
                 });
             } catch (error) { result.innerHTML = '<p class="border border-red-200 bg-red-50 p-4 text-xs text-red-700">We could not look up your order right now.</p>'; console.error('Unable to track order:', error); }
         }
+        function cleanPaymentParams() {
+            const cleanUrl = new URL(window.location.href);
+            ['reference', 'trxref', 'payment'].forEach((name) => cleanUrl.searchParams.delete(name));
+            window.history.replaceState({}, document.title, `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
+        }
+        function noticeForStatus(status) {
+            switch (status) {
+                case 'paid': return ['success', 'Payment received. Thank you!'];
+                case 'pending': return ['info', 'Your payment has not been completed yet. If you were charged, please refresh this page in a minute or contact the atelier.'];
+                case 'abandoned': return ['info', 'The payment was not completed. You can try again whenever you are ready.'];
+                case 'failed': return ['error', 'The payment was not successful. Please try again.'];
+                case 'reversed': return ['error', 'This payment was reversed. Please contact the atelier.'];
+                case 'under_review': return ['info', 'We received your payment and the atelier is checking it. You do not need to pay again.'];
+                case 'verification_unavailable':
+                case 'busy': return ['info', 'We could not confirm your payment just yet. Please refresh this page in a moment.'];
+                case 'unknown_reference': return ['error', 'We could not find this payment. Please contact the atelier if you were charged.'];
+                default: return ['error', 'We could not confirm your payment. If you were charged, please contact the atelier.'];
+            }
+        }
         async function verifyPaymentReturn(reference, orderNumber) {
             result.innerHTML = '<p class="text-center text-xs text-brand-muted">Verifying your payment...</p>';
+            let notice = noticeForStatus();
             try {
-                const snapshot = await getDocs(query(collection(db, 'orders'), where('orderNumber', '==', orderNumber)));
-                if (snapshot.empty) throw new Error('We could not find the order for this payment.');
-                const orderDocument = snapshot.docs[0];
+                // Only the payment reference is sent. Paystack is asked directly, on the server, whether it really succeeded.
                 const response = await fetch(`${paymentWorkerUrl}/verify-payment`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ reference, orderId: orderDocument.id })
+                    body: JSON.stringify({ reference })
                 });
-                const verification = await response.json();
-                if (!response.ok || !verification.ok) {
-                    throw new Error(verification.error || 'Payment verification failed.');
-                }
-
-                const cleanUrl = new URL(window.location.href);
-                cleanUrl.searchParams.delete('reference');
-                cleanUrl.searchParams.delete('trxref');
-                window.history.replaceState({}, document.title, `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`);
-                await trackOrder(orderNumber);
-                const notice = document.createElement('p');
-                notice.className = 'mb-4 border border-green-200 bg-green-50 p-3 text-[11px] text-green-700';
-                notice.textContent = 'Payment verified successfully.';
-                result.prepend(notice);
+                const verification = await response.json().catch(() => ({}));
+                notice = noticeForStatus(verification.status);
             } catch (error) {
-                await trackOrder(orderNumber);
-                const notice = document.createElement('p');
-                notice.className = 'mb-4 border border-red-200 bg-red-50 p-3 text-[11px] text-red-700';
-                notice.textContent = error.message || 'Payment verification failed. Please contact the atelier.';
-                result.prepend(notice);
                 console.error('Unable to verify Paystack payment:', error);
             }
+            cleanPaymentParams();
+            await trackOrder(orderNumber);
+            showNotice(notice[0], notice[1]);
         }
         form.addEventListener('submit', (event) => { event.preventDefault(); trackOrder(input.value.trim().toUpperCase()); });
         const searchParams = new URLSearchParams(window.location.search);
         const initialOrder = searchParams.get('order');
         const paymentReference = searchParams.get('reference') || searchParams.get('trxref');
+        const paymentCancelled = searchParams.get('payment') === 'cancelled';
         if (initialOrder) input.value = initialOrder;
         if (paymentReference && initialOrder) verifyPaymentReturn(paymentReference, initialOrder.toUpperCase());
-        else if (initialOrder) trackOrder(initialOrder.toUpperCase());
+        else if (initialOrder) {
+            trackOrder(initialOrder.toUpperCase()).then(() => {
+                if (paymentCancelled) { cleanPaymentParams(); showNotice('info', 'Payment cancelled. You have not been charged.'); }
+            });
+        }
+        // If the customer presses Back from Paystack, reload so the Pay button is fresh.
+        window.addEventListener('pageshow', (event) => { if (event.persisted) window.location.reload(); });
     </script>
 </body>
 </html>
