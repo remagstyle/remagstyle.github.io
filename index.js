@@ -1,331 +1,658 @@
-﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            signOut, 
-            onAuthStateChanged, 
-            updateProfile 
-        } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, addDoc, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-        import { startInactivityLogout } from "./auth-inactivity.js";
+﻿// RemagStyle Paystack Worker - Stage 5 (secure payment flow + private order lookup)
+//
+// Secrets (Cloudflare Runtime): PAYSTACK_SECRET_KEY, FIREBASE_SERVICE_ACCOUNT
+//
+// Endpoints
+//   GET  /                     health message
+//   POST /initialize-payment   { orderId, email? }  + optional "Authorization: Bearer <Firebase ID token>"
+//   POST /verify-payment       { reference }
+//   POST /lookup-order         { orderNumber }  -> { orderId }  (lets the tracking page work without public order listing)
+//   POST /webhook/paystack     called by Paystack (signature checked)
+//
+// The browser NEVER sends an amount. The amount always comes from the order in Firestore.
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o",
-            authDomain: "remagstyle-43b41.firebaseapp.com",
-            projectId: "remagstyle-43b41",
-            messagingSenderId: "145831201308",
-            appId: "1:145831201308:web:489a014516356f73a72dd9"
-        };
+const ALLOWED_ORIGINS = [
+  'https://remag.style',
+  'https://www.remag.style',
+  'https://remagstyle.github.io'
+];
+const SITE_URL = 'https://remag.style';
+const CALLBACK_PATH = '/track-order.html';
+const SUPPORTED_CURRENCY = 'GHS';
+const MAX_AMOUNT = 1000000; // sanity cap in GHS
+const PAID_WORDS = ['paid', 'success', 'successful', 'confirmed'];
+const ORDER_ID_RE = /^[A-Za-z0-9_-]{4,64}$/;
+const REFERENCE_RE = /^RS-[a-f0-9]{24}$/;
+const ORDER_NUMBER_RE = /^[A-Z0-9-]{6,40}$/;
 
-        const ADMIN_UID = 'jDvJwjfMgoTU2oXXxmK2AwywrlN2';
-        const ADMIN_EMAIL = 'admin@remagstyle.com';
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+// ---------- Small helpers ----------
 
-        // UI Elements
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
-        const accountDrawer = document.getElementById('account-drawer');
-        const accountOverlay = document.getElementById('account-overlay');
-        const accountPanel = document.getElementById('account-panel');
-        const openAccountBtn = document.getElementById('open-account-btn');
-        const closeAccountBtn = document.getElementById('close-account-btn');
-        const navUserStatus = document.getElementById('nav-user-status');
-        const authErrorMsg = document.getElementById('auth-error-msg');
-        const authSuccessToast = document.getElementById('auth-success-toast');
-        let authErrorTimeout;
-        let authSuccessTimeout;
-        let stopInactivityLogout;
+function corsHeaders(request) {
+  const headers = {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+    Vary: 'Origin'
+  };
+  const origin = request.headers.get('Origin');
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+    headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS';
+    headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+    headers['Access-Control-Max-Age'] = '600';
+  }
+  return headers;
+}
 
-        const authFormsContainer = document.getElementById('auth-forms-container');
-        const userDashboardContainer = document.getElementById('user-dashboard-container');
+function json(request, body, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: corsHeaders(request) });
+}
 
-        const tabSigninBtn = document.getElementById('tab-signin-btn');
-        const tabSignupBtn = document.getElementById('tab-signup-btn');
-        const signinForm = document.getElementById('signin-form');
-        const signupForm = document.getElementById('signup-form');
-        const signoutBtn = document.getElementById('signout-btn');
+async function readJson(request) {
+  const text = await request.text();
+  if (text.length > 10000) return null;
+  try {
+    const value = JSON.parse(text);
+    return value && typeof value === 'object' ? value : null;
+  } catch {
+    return null;
+  }
+}
 
-        const userDisplayName = document.getElementById('user-display-name');
-        const userDisplayEmail = document.getElementById('user-display-email');
-        const orderForm = document.getElementById('order-form');
-        const orderFormMessage = document.getElementById('order-form-message');
-        const ordersList = document.getElementById('orders-list');
-        const ordersLoading = document.getElementById('orders-loading');
+function nowIso() {
+  return new Date().toISOString();
+}
 
-        function showAuthError(message) {
-            clearTimeout(authErrorTimeout);
-            authErrorMsg.textContent = message;
-            authErrorMsg.classList.remove('hidden');
-            authErrorTimeout = setTimeout(() => {
-                authErrorMsg.classList.add('hidden');
-                authErrorMsg.textContent = '';
-            }, 10000);
-        }
+function randomHex(bytes) {
+  const array = new Uint8Array(bytes);
+  crypto.getRandomValues(array);
+  return Array.from(array, (b) => b.toString(16).padStart(2, '0')).join('');
+}
 
-        function showAuthSuccess(message) {
-            clearTimeout(authSuccessTimeout);
-            authSuccessToast.textContent = message;
-            authSuccessToast.classList.remove('hidden');
-            authSuccessTimeout = setTimeout(() => {
-                authSuccessToast.classList.add('hidden');
-                authSuccessToast.textContent = '';
-            }, 10000);
-        }
+function validEmail(value) {
+  if (typeof value !== 'string') return null;
+  const email = value.trim();
+  if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+  return email;
+}
 
-        function showOrderMessage(message, isError = false) {
-            orderFormMessage.textContent = message;
-            orderFormMessage.className = isError
-                ? 'mt-3 p-3 text-[11px] bg-red-50 border border-red-200 text-red-700'
-                : 'mt-3 p-3 text-[11px] bg-green-50 border border-green-200 text-green-700';
-        }
+function isPaidState(value) {
+  return PAID_WORDS.includes(String(value || '').toLowerCase());
+}
 
-        function escapeHtml(value) {
-            return String(value).replace(/[&<>'"]/g, (character) => ({
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                "'": '&#39;',
-                '"': '&quot;'
-            })[character]);
-        }
+function bearerToken(request) {
+  const header = request.headers.get('Authorization') || '';
+  return header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+}
 
-        async function loadOrders(user) {
-            ordersLoading.textContent = 'Loading...';
-            try {
-                const ordersQuery = query(collection(db, 'orders'), where('userId', '==', user.uid));
-                const snapshot = await getDocs(ordersQuery);
-                const orders = snapshot.docs.map((orderDocument) => ({ id: orderDocument.id, ...orderDocument.data() }));
-                orders.sort((first, second) => {
-                    const firstDate = first.createdAt?.toMillis?.() || 0;
-                    const secondDate = second.createdAt?.toMillis?.() || 0;
-                    return secondDate - firstDate;
-                });
+function timingSafeEqualHex(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
 
-                ordersLoading.textContent = `${orders.length} order${orders.length === 1 ? '' : 's'}`;
-                ordersList.innerHTML = orders.length
-                    ? orders.map((order) => {
-                        const date = order.createdAt?.toDate?.().toLocaleDateString() || 'Just submitted';
-                        return `<article class="border border-brand-border bg-white p-4">
-                            <div class="flex flex-wrap items-start justify-between gap-3">
-                                <div>
-                                    <p class="text-[10px] uppercase tracking-[0.18em] text-brand-muted">${escapeHtml(order.orderNumber || 'Legacy order')}</p>
-                                    <p class="text-[10px] tracking-[0.18em] uppercase text-brand-muted">${escapeHtml(order.garment)}</p>
-                                    <h5 class="mt-1 font-serif text-xl text-brand-text">${escapeHtml(order.occasion)}</h5>
-                                </div>
-                                <span class="border border-brand-border px-2 py-1 text-[9px] tracking-[0.15em] uppercase text-brand-text">${escapeHtml(order.status)}</span>
-                            </div>
-                            <div class="mt-3 grid grid-cols-2 gap-3 text-[11px] text-brand-muted">
-                                <p>Submitted<br><span class="text-brand-text">${escapeHtml(date)}</span></p>
-                                <p>Delivery<br><span class="text-brand-text">${escapeHtml(order.deliveryStatus)}</span></p>
-                            </div>
-                        </article>`;
-                    }).join('')
-                    : '<p class="border border-dashed border-brand-border p-4 text-xs text-brand-muted">No orders yet. Submit your first bespoke request above.</p>';
-            } catch (error) {
-                ordersLoading.textContent = '';
-                ordersList.innerHTML = '<p class="border border-red-200 bg-red-50 p-4 text-xs text-red-700">We could not load your orders right now.</p>';
-                console.error('Unable to load orders:', error);
-            }
-        }
+// ---------- Google service-account login ----------
 
-        // Mobile Navigation
-        mobileMenuBtn.addEventListener('click', () => {
-            const isOpen = !mobileMenu.classList.contains('hidden');
-            mobileMenu.classList.toggle('hidden', isOpen);
-            mobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
+let cachedToken = null;
+
+function base64UrlFromBytes(bytes) {
+  let binary = '';
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function base64UrlFromString(text) {
+  return base64UrlFromBytes(new TextEncoder().encode(text));
+}
+
+function bytesFromBase64Url(text) {
+  const padded = text.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(text.length / 4) * 4, '=');
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function pemToArrayBuffer(pem) {
+  const body = pem
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s+/g, '');
+  return bytesFromBase64Url(body.replace(/\+/g, '-').replace(/\//g, '_')).buffer;
+}
+
+function readServiceAccount(env) {
+  if (!env.FIREBASE_SERVICE_ACCOUNT) throw new Error('missing_secret');
+  let account;
+  try {
+    account = JSON.parse(env.FIREBASE_SERVICE_ACCOUNT);
+  } catch {
+    throw new Error('secret_not_valid_json');
+  }
+  if (!account.client_email || !account.private_key || !account.project_id) {
+    throw new Error('secret_missing_fields');
+  }
+  return account;
+}
+
+async function getAccessToken(env) {
+  const now = Math.floor(Date.now() / 1000);
+  if (cachedToken && cachedToken.expiresAt - 60 > now) return cachedToken.value;
+
+  const account = readServiceAccount(env);
+  const header = base64UrlFromString(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const claims = base64UrlFromString(JSON.stringify({
+    iss: account.client_email,
+    scope: 'https://www.googleapis.com/auth/datastore',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600
+  }));
+  const unsigned = `${header}.${claims}`;
+  const key = await crypto.subtle.importKey(
+    'pkcs8',
+    pemToArrayBuffer(account.private_key),
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(unsigned));
+  const assertion = `${unsigned}.${base64UrlFromBytes(new Uint8Array(signature))}`;
+
+  const response = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion })
+  });
+  if (!response.ok) throw new Error(`token_request_failed_${response.status}`);
+  const data = await response.json();
+  cachedToken = { value: data.access_token, expiresAt: now + (data.expires_in || 3600) };
+  return cachedToken.value;
+}
+
+// ---------- Firebase login check for customers (ID token) ----------
+
+let googleKeys = null;
+
+async function getGoogleKeys(force = false) {
+  const now = Date.now();
+  if (!force && googleKeys && googleKeys.expires > now) return googleKeys.byKid;
+  const res = await fetch('https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com');
+  if (!res.ok) throw new Error('jwk_fetch_failed');
+  const data = await res.json();
+  const byKid = {};
+  for (const k of data.keys || []) byKid[k.kid] = k;
+  googleKeys = { byKid, expires: now + 3600 * 1000 };
+  return byKid;
+}
+
+// Returns { uid, email } for a valid Firebase login token, otherwise null.
+async function verifyFirebaseIdToken(env, token) {
+  const account = readServiceAccount(env);
+  const parts = String(token).split('.');
+  if (parts.length !== 3) return null;
+
+  let header;
+  let payload;
+  try {
+    header = JSON.parse(new TextDecoder().decode(bytesFromBase64Url(parts[0])));
+    payload = JSON.parse(new TextDecoder().decode(bytesFromBase64Url(parts[1])));
+  } catch {
+    return null;
+  }
+  if (header.alg !== 'RS256' || !header.kid) return null;
+
+  let jwk = (await getGoogleKeys())[header.kid];
+  if (!jwk) jwk = (await getGoogleKeys(true))[header.kid];
+  if (!jwk) return null;
+
+  const key = await crypto.subtle.importKey('jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify']);
+  const valid = await crypto.subtle.verify(
+    'RSASSA-PKCS1-v1_5',
+    key,
+    bytesFromBase64Url(parts[2]),
+    new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
+  );
+  if (!valid) return null;
+
+  const now = Math.floor(Date.now() / 1000);
+  if (payload.aud !== account.project_id) return null;
+  if (payload.iss !== `https://securetoken.google.com/${account.project_id}`) return null;
+  if (!payload.sub || typeof payload.exp !== 'number' || payload.exp <= now || payload.iat > now + 300) return null;
+  return { uid: payload.sub, email: typeof payload.email === 'string' ? payload.email : null };
+}
+
+// ---------- Firestore (REST) ----------
+
+function encodeValue(value) {
+  if (value === null || value === undefined) return { nullValue: null };
+  if (typeof value === 'string') return { stringValue: value };
+  if (typeof value === 'boolean') return { booleanValue: value };
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
+  }
+  throw new Error('unsupported_value');
+}
+
+function encodeFields(object) {
+  const fields = {};
+  for (const [key, value] of Object.entries(object)) fields[key] = encodeValue(value);
+  return fields;
+}
+
+function decodeValue(v) {
+  if (!v) return undefined;
+  if ('stringValue' in v) return v.stringValue;
+  if ('integerValue' in v) return Number(v.integerValue);
+  if ('doubleValue' in v) return v.doubleValue;
+  if ('booleanValue' in v) return v.booleanValue;
+  if ('timestampValue' in v) return v.timestampValue;
+  if ('nullValue' in v) return null;
+  return undefined;
+}
+
+function decodeFields(fields) {
+  const out = {};
+  for (const [key, value] of Object.entries(fields || {})) out[key] = decodeValue(value);
+  return out;
+}
+
+function documentName(account, collection, id) {
+  return `projects/${account.project_id}/databases/(default)/documents/${collection}/${id}`;
+}
+
+async function fsGet(env, collection, id) {
+  const account = readServiceAccount(env);
+  const token = await getAccessToken(env);
+  const url = `https://firestore.googleapis.com/v1/${documentName(account, collection, encodeURIComponent(id))}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (res.status === 404) return { exists: false };
+  if (!res.ok) throw new Error(`firestore_read_${res.status}`);
+  const doc = await res.json();
+  return { exists: true, fields: decodeFields(doc.fields), updateTime: doc.updateTime };
+}
+
+async function fsCommit(env, writes) {
+  const account = readServiceAccount(env);
+  const token = await getAccessToken(env);
+  const url = `https://firestore.googleapis.com/v1/projects/${account.project_id}/databases/(default)/documents:commit`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ writes })
+  });
+  if (res.ok) return { ok: true };
+  let status = '';
+  try {
+    status = (await res.json()).error?.status || '';
+  } catch {
+    // ignore
+  }
+  const conflict = res.status === 409 || ['FAILED_PRECONDITION', 'ALREADY_EXISTS', 'ABORTED'].includes(status);
+  return { ok: false, conflict, code: res.status };
+}
+
+async function fsFindOrderIdByNumber(env, orderNumber) {
+  const account = readServiceAccount(env);
+  const token = await getAccessToken(env);
+  const url = `https://firestore.googleapis.com/v1/projects/${account.project_id}/databases/(default)/documents:runQuery`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      structuredQuery: {
+        from: [{ collectionId: 'orders' }],
+        where: { fieldFilter: { field: { fieldPath: 'orderNumber' }, op: 'EQUAL', value: { stringValue: orderNumber } } },
+        select: { fields: [{ fieldPath: '__name__' }] },
+        limit: 1
+      }
+    })
+  });
+  if (!res.ok) throw new Error(`firestore_query_${res.status}`);
+  const rows = await res.json();
+  const name = Array.isArray(rows) ? rows.find((row) => row.document)?.document?.name : null;
+  return name ? name.split('/').pop() : null;
+}
+
+function writeCreate(account, collection, id, object) {
+  return {
+    update: { name: documentName(account, collection, id), fields: encodeFields(object) },
+    currentDocument: { exists: false }
+  };
+}
+
+function writeUpdate(account, collection, id, object, updateTime) {
+  const write = {
+    update: { name: documentName(account, collection, id), fields: encodeFields(object) },
+    updateMask: { fieldPaths: Object.keys(object) }
+  };
+  if (updateTime) write.currentDocument = { updateTime };
+  return write;
+}
+
+// ---------- Paystack ----------
+
+function paystackRequest(env, path, init = {}) {
+  return fetch(`https://api.paystack.co${path}`, {
+    ...init,
+    headers: { Authorization: `Bearer ${env.PAYSTACK_SECRET_KEY}`, 'Content-Type': 'application/json' }
+  });
+}
+
+async function paystackVerify(env, reference) {
+  let res;
+  try {
+    res = await paystackRequest(env, `/transaction/verify/${encodeURIComponent(reference)}`);
+  } catch {
+    return { unavailable: true };
+  }
+  if (res.status >= 500) return { unavailable: true };
+  let body = null;
+  try {
+    body = await res.json();
+  } catch {
+    // ignore
+  }
+  if (!body || body.status !== true || !body.data) return { data: null };
+  return { data: body.data };
+}
+
+function readMetadata(value) {
+  if (value && typeof value === 'object') return value;
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value) || {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
+function mapPaystackStatus(status) {
+  if (status === 'failed') return 'failed';
+  if (status === 'abandoned') return 'abandoned';
+  if (status === 'reversed') return 'reversed';
+  return 'pending';
+}
+
+// ---------- Core: confirm a payment (used by /verify-payment and the webhook) ----------
+// Safe to call any number of times, at the same moment, from anywhere. The order is marked paid once.
+
+async function finalizePayment(env, reference) {
+  const account = readServiceAccount(env);
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const paymentDoc = await fsGet(env, 'payments', reference);
+    // We only accept references that WE created when the payment was started.
+    if (!paymentDoc.exists) {
+      return { http: 404, body: { ok: false, status: 'unknown_reference', message: 'Payment not found.' } };
+    }
+    const payment = paymentDoc.fields;
+    const base = { orderId: payment.orderId, reference };
+
+    if (payment.status === 'success') {
+      return { http: 200, body: { ok: true, status: 'paid', ...base } };
+    }
+    if (payment.status === 'review' || payment.status === 'duplicate_payment') {
+      return { http: 200, body: { ok: false, status: 'under_review', ...base } };
+    }
+
+    const checked = await paystackVerify(env, reference);
+    if (checked.unavailable) {
+      return { http: 502, body: { ok: false, status: 'verification_unavailable', message: 'Could not reach Paystack. Please try again shortly.', ...base } };
+    }
+    const tx = checked.data;
+
+    if (!tx || tx.status !== 'success') {
+      const mapped = tx ? mapPaystackStatus(tx.status) : 'pending';
+      if (tx && payment.status !== mapped) {
+        await fsCommit(env, [writeUpdate(account, 'payments', reference, {
+          status: mapped,
+          paystackStatus: String(tx.status),
+          lastCheckedAt: nowIso()
+        })]);
+      }
+      return { http: 200, body: { ok: false, status: mapped, ...base } };
+    }
+
+    // Paystack says "success". Now prove it is the right money for the right order.
+    const orderDoc = await fsGet(env, 'orders', payment.orderId);
+    const metadata = readMetadata(tx.metadata);
+    const problems = [];
+    if (!orderDoc.exists) problems.push('order_missing');
+    if (tx.reference !== reference) problems.push('reference_mismatch');
+    if (tx.amount !== payment.expectedAmountMinor) problems.push('amount_mismatch');
+    if (String(tx.currency || '').toUpperCase() !== payment.currency) problems.push('currency_mismatch');
+    if (metadata.orderId !== payment.orderId) problems.push('order_mismatch');
+
+    let flag = null;
+    if (problems.length) {
+      flag = { status: 'review', reviewReason: problems.join(',') };
+    } else if (isPaidState(orderDoc.fields.paymentStatus) && orderDoc.fields.paymentReference !== reference) {
+      flag = { status: 'duplicate_payment', reviewReason: 'order_already_paid' };
+    }
+
+    if (flag) {
+      const committed = await fsCommit(env, [writeUpdate(account, 'payments', reference, {
+        ...flag,
+        paystackStatus: 'success',
+        paystackTransactionId: String(tx.id),
+        paidAmountMinor: typeof tx.amount === 'number' ? tx.amount : null,
+        lastCheckedAt: nowIso()
+      }, paymentDoc.updateTime)]);
+      if (committed.conflict) continue;
+      if (!committed.ok) throw new Error('firestore_commit_failed');
+      console.error(`payment flagged for review: ${reference} ${flag.reviewReason}`);
+      return { http: 200, body: { ok: false, status: 'under_review', ...base } };
+    }
+
+    const paidAmount = Number((tx.amount / 100).toFixed(2));
+    const paidAt = tx.paid_at || nowIso();
+    const committed = await fsCommit(env, [
+      writeUpdate(account, 'payments', reference, {
+        status: 'success',
+        paystackStatus: 'success',
+        paystackTransactionId: String(tx.id),
+        paidAmountMinor: tx.amount,
+        paidAmount,
+        paidCurrency: payment.currency,
+        channel: tx.channel || null,
+        paidAt,
+        verifiedAt: nowIso()
+      }, paymentDoc.updateTime),
+      writeUpdate(account, 'orders', payment.orderId, {
+        paymentStatus: 'Paid',
+        paidAmount,
+        paidCurrency: payment.currency,
+        paidAt,
+        paymentReference: reference,
+        paystackTransactionId: String(tx.id)
+      }, orderDoc.updateTime)
+    ]);
+    if (committed.ok) return { http: 200, body: { ok: true, status: 'paid', ...base } };
+    if (committed.conflict) continue; // someone else changed it at the same moment; look again
+    throw new Error('firestore_commit_failed');
+  }
+  return { http: 409, body: { ok: false, status: 'busy', message: 'Please try again in a moment.' } };
+}
+
+// ---------- Handlers ----------
+
+async function handleInitialize(request, env) {
+  const body = await readJson(request);
+  if (!body) return json(request, { ok: false, error: 'Invalid request.' }, 400);
+
+  const orderId = typeof body.orderId === 'string' ? body.orderId.trim() : '';
+  if (!ORDER_ID_RE.test(orderId)) return json(request, { ok: false, error: 'Invalid order.' }, 400);
+
+  const order = await fsGet(env, 'orders', orderId);
+  if (!order.exists) return json(request, { ok: false, error: 'Order not found.' }, 404);
+  const fields = order.fields;
+
+  if (isPaidState(fields.paymentStatus)) {
+    return json(request, { ok: false, error: 'This order has already been paid.' }, 400);
+  }
+  if (['cancelled', 'canceled'].includes(String(fields.status || '').toLowerCase())) {
+    return json(request, { ok: false, error: 'This order has been cancelled.' }, 400);
+  }
+
+  // The amount comes ONLY from the order stored in Firestore.
+  let amount = null;
+  if (typeof fields.paymentAmount === 'number' && Number.isFinite(fields.paymentAmount)) amount = fields.paymentAmount;
+  else if (typeof fields.paymentAmount === 'string' && /^\d+(\.\d{1,2})?$/.test(fields.paymentAmount.trim())) amount = Number(fields.paymentAmount);
+  if (amount === null || amount <= 0) {
+    return json(request, { ok: false, error: 'No payment is due on this order yet.' }, 400);
+  }
+  const minor = Math.round(amount * 100);
+  if (amount > MAX_AMOUNT || Math.abs(amount * 100 - minor) > 1e-6) {
+    return json(request, { ok: false, error: 'This order amount cannot be paid online. Please contact us.' }, 400);
+  }
+
+  const currency = String(fields.currency || SUPPORTED_CURRENCY).toUpperCase();
+  if (currency !== SUPPORTED_CURRENCY) {
+    return json(request, { ok: false, error: 'Online payment is not available for this currency yet. Please contact us.' }, 400);
+  }
+
+  // Who is paying?
+  const ownerUid = typeof fields.userId === 'string' && fields.userId ? fields.userId : null;
+  let email;
+  if (ownerUid) {
+    const token = bearerToken(request);
+    if (!token) return json(request, { ok: false, error: 'Please log in to pay for this order.' }, 401);
+    let user = null;
+    try {
+      user = await verifyFirebaseIdToken(env, token);
+    } catch {
+      user = null;
+    }
+    if (!user) return json(request, { ok: false, error: 'Your login has expired. Please log in again.' }, 401);
+    if (user.uid !== ownerUid) return json(request, { ok: false, error: 'This order does not belong to your account.' }, 403);
+    email = validEmail(fields.customerEmail) || validEmail(user.email);
+    if (!email) return json(request, { ok: false, error: 'No email address is saved for this order.' }, 400);
+  } else {
+    email = validEmail(body.email);
+    if (!email) return json(request, { ok: false, error: 'Please enter a valid email address.' }, 400);
+  }
+
+  const account = readServiceAccount(env);
+  const reference = `RS-${randomHex(12)}`;
+  const orderNumber = typeof fields.orderNumber === 'string' ? fields.orderNumber : orderId;
+
+  // Save what we EXPECT before Paystack is even contacted.
+  const created = await fsCommit(env, [writeCreate(account, 'payments', reference, {
+    reference,
+    orderId,
+    orderNumber,
+    expectedAmountMinor: minor,
+    expectedAmount: amount,
+    currency,
+    email,
+    userId: ownerUid,
+    status: 'initialized',
+    createdAt: nowIso()
+  })]);
+  if (!created.ok) throw new Error('payment_record_failed');
+
+  const pageUrl = `${SITE_URL}${CALLBACK_PATH}?order=${encodeURIComponent(orderId)}`;
+  let paystackBody = null;
+  try {
+    const res = await paystackRequest(env, '/transaction/initialize', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        amount: minor,
+        currency,
+        reference,
+        callback_url: pageUrl,
+        metadata: { orderId, orderNumber, cancel_action: `${pageUrl}&payment=cancelled` }
+      })
+    });
+    paystackBody = await res.json();
+  } catch {
+    paystackBody = null;
+  }
+
+  if (!paystackBody || paystackBody.status !== true || !paystackBody.data?.authorization_url) {
+    await fsCommit(env, [writeUpdate(account, 'payments', reference, { status: 'init_failed', lastCheckedAt: nowIso() })]);
+    return json(request, { ok: false, error: 'Could not start the payment. Please try again.' }, 502);
+  }
+
+  return json(request, { ok: true, authorizationUrl: paystackBody.data.authorization_url, reference }, 200);
+}
+
+async function handleVerify(request, env) {
+  const body = await readJson(request);
+  const reference = body && typeof body.reference === 'string' ? body.reference.trim() : '';
+  if (!REFERENCE_RE.test(reference)) return json(request, { ok: false, error: 'Invalid payment reference.' }, 400);
+  const result = await finalizePayment(env, reference);
+  return json(request, result.body, result.http);
+}
+
+// Returns ONLY the random order id. The tracking page then reads that one order directly,
+// so the orders collection no longer has to be listable by the public.
+async function handleLookup(request, env) {
+  if (env.LOOKUP_LIMITER) {
+    const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+    const { success } = await env.LOOKUP_LIMITER.limit({ key: ip });
+    if (!success) return json(request, { ok: false, error: 'Too many attempts. Please wait a minute and try again.' }, 429);
+  }
+  const body = await readJson(request);
+  const orderNumber = body && typeof body.orderNumber === 'string' ? body.orderNumber.trim().toUpperCase() : '';
+  if (!ORDER_NUMBER_RE.test(orderNumber)) return json(request, { ok: false, error: 'Invalid order number.' }, 400);
+  const orderId = await fsFindOrderIdByNumber(env, orderNumber);
+  if (!orderId) return json(request, { ok: false, error: 'Order not found.' }, 404);
+  return json(request, { ok: true, orderId }, 200);
+}
+
+async function computeSignature(rawBody, secret) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-512' }, false, ['sign']);
+  const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(rawBody));
+  return Array.from(new Uint8Array(signature), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function handleWebhook(request, env) {
+  const rawBody = await request.text();
+  const header = request.headers.get('x-paystack-signature') || '';
+  if (!env.PAYSTACK_SECRET_KEY || !header) return new Response('Invalid signature', { status: 401 });
+  const expected = await computeSignature(rawBody, env.PAYSTACK_SECRET_KEY);
+  if (!timingSafeEqualHex(expected, header.toLowerCase())) return new Response('Invalid signature', { status: 401 });
+
+  let event;
+  try {
+    event = JSON.parse(rawBody);
+  } catch {
+    return new Response('Invalid JSON', { status: 400 });
+  }
+
+  // We do not trust the webhook body for amounts or status. We only use its reference,
+  // then ask Paystack directly and run the same checks as /verify-payment.
+  if (event && event.event === 'charge.success' && REFERENCE_RE.test(String(event.data?.reference || ''))) {
+    await finalizePayment(env, event.data.reference); // a thrown error returns 500 so Paystack retries
+  }
+  return new Response('ok', { status: 200 });
+}
+
+export default {
+  async fetch(request, env) {
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: corsHeaders(request) });
+
+    const { pathname } = new URL(request.url);
+    try {
+      if (request.method === 'GET' && pathname === '/') {
+        return new Response('RemagStyle Paystack Worker is running.', {
+          headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }
         });
-
-        mobileMenuLinks.forEach((link) => {
-            link.addEventListener('click', () => {
-                mobileMenu.classList.add('hidden');
-                mobileMenuBtn.setAttribute('aria-expanded', 'false');
-            });
-        });
-
-        // Drawer Controls
-        function isAdminUser(user) {
-            return !!user && (user.uid === ADMIN_UID || user.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase());
-        }
-
-        async function openAccount() {
-            await auth.authStateReady();
-            if (auth.currentUser && !auth.currentUser.isAnonymous) {
-                if (isAdminUser(auth.currentUser)) {
-                    window.location.href = 'admin/index.html';
-                    return;
-                }
-                window.location.href = 'client-dashboard.html';
-                return;
-            }
-            accountDrawer.classList.remove('pointer-events-none');
-            accountOverlay.classList.remove('opacity-0', 'pointer-events-none');
-            accountOverlay.classList.add('opacity-100');
-            accountPanel.classList.remove('translate-x-full');
-        }
-
-        function closeAccount() {
-            accountOverlay.classList.remove('opacity-100');
-            accountOverlay.classList.add('opacity-0', 'pointer-events-none');
-            accountPanel.classList.add('translate-x-full');
-            setTimeout(() => accountDrawer.classList.add('pointer-events-none'), 300);
-        }
-
-        openAccountBtn.addEventListener('click', () => openAccount());
-        document.getElementById('order-now-btn').addEventListener('click', (event) => {
-            event.preventDefault();
-            openAccount();
-        });
-        closeAccountBtn.addEventListener('click', closeAccount);
-        accountOverlay.addEventListener('click', closeAccount);
-
-        // Tabs
-        tabSigninBtn.addEventListener('click', () => {
-            signinForm.classList.remove('hidden');
-            signupForm.classList.add('hidden');
-        });
-
-        tabSignupBtn.addEventListener('click', () => {
-            signupForm.classList.remove('hidden');
-            signinForm.classList.add('hidden');
-        });
-
-        // Sign Up
-        signupForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('signup-email').value.trim().toLowerCase();
-            const password = document.getElementById('signup-password').value;
-            const fname = document.getElementById('signup-fname').value;
-            const lname = document.getElementById('signup-lname').value;
-
-            if (email === ADMIN_EMAIL.toLowerCase()) {
-                showAuthError('Use the admin login page for the administrator account.');
-                return;
-            }
-
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                await updateProfile(userCredential.user, { displayName: `${fname} ${lname}` });
-                await setDoc(doc(db, 'users', userCredential.user.uid), {
-                    uid: userCredential.user.uid,
-                    firstName: fname,
-                    lastName: lname,
-                    displayName: `${fname} ${lname}`,
-                    email,
-                    createdAt: serverTimestamp()
-                });
-                window.location.href = 'client-dashboard.html';
-            } catch (error) {
-                showAuthError(error.code === 'auth/email-already-in-use'
-                    ? 'This email already has an account. Please use the Sign In tab.'
-                    : error.message);
-            }
-        });
-
-        orderForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const user = auth.currentUser;
-            if (!user) {
-                showOrderMessage('Please sign in before placing an order.', true);
-                return;
-            }
-
-            const submitButton = orderForm.querySelector('button[type="submit"]');
-            submitButton.disabled = true;
-            submitButton.textContent = 'Submitting...';
-
-            try {
-                const orderNumber = `RS-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
-                await setDoc(doc(db, 'orders', orderNumber), {
-                    orderNumber,
-                    userId: user.uid,
-                    customerEmail: user.email,
-                    garment: document.getElementById('order-garment').value,
-                    occasion: document.getElementById('order-occasion').value.trim(),
-                    designBrief: document.getElementById('order-notes').value.trim(),
-                    measurements: {
-                        chest: Number(document.getElementById('measurement-chest').value),
-                        waist: Number(document.getElementById('measurement-waist').value),
-                        shoulder: Number(document.getElementById('measurement-shoulder').value),
-                        length: Number(document.getElementById('measurement-length').value)
-                    },
-                    inspirationLinks: document.getElementById('order-inspiration').value.trim().split('\n').filter(Boolean),
-                    status: 'Received',
-                    deliveryStatus: 'To be confirmed',
-                    createdAt: serverTimestamp()
-                });
-                orderForm.reset();
-                showOrderMessage('Your order request has been received.');
-                await loadOrders(user);
-            } catch (error) {
-                showOrderMessage('We could not submit your order. Please try again.', true);
-                console.error('Unable to submit order:', error);
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Place Order Request';
-            }
-        });
-
-        // Sign In
-        signinForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('signin-email').value.trim().toLowerCase();
-            const password = document.getElementById('signin-password').value;
-
-            if (email === ADMIN_EMAIL.toLowerCase()) {
-                showAuthError('Use the admin login page for the administrator account.');
-                return;
-            }
-
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                if (isAdminUser(userCredential.user)) {
-                    await signOut(auth);
-                    showAuthError('This account is reserved for the admin workspace.');
-                    return;
-                }
-                window.location.href = 'client-dashboard.html';
-            } catch (error) {
-                showAuthError('Invalid email or password.');
-            }
-        });
-
-        // Sign Out
-        signoutBtn.addEventListener('click', () => signOut(auth));
-
-        // Auth Listener
-        onAuthStateChanged(auth, async (user) => {
-            stopInactivityLogout?.();
-            if (user && isAdminUser(user)) {
-                await signOut(auth);
-                window.location.href = 'admin/index.html';
-                return;
-            }
-            if (user) {
-                const name = user.displayName || user.email?.split('@')[0] || 'Client';
-                navUserStatus.textContent = user.isAnonymous ? 'Sign In / Sign Up' : name.split(' ')[0];
-                authFormsContainer.classList.add('hidden');
-                userDashboardContainer.classList.remove('hidden');
-                userDisplayName.textContent = `Welcome back, ${name}`;
-                userDisplayEmail.textContent = user.email || 'Guest order session';
-                loadOrders(user);
-                if (!user.isAnonymous) {
-                    stopInactivityLogout = startInactivityLogout(auth, signOut, () => {
-                        closeAccount();
-                        showAuthError('You were signed out after 30 minutes of inactivity.');
-                    });
-                }
-            } else {
-                navUserStatus.textContent = 'Sign In / Sign Up';
-                authFormsContainer.classList.remove('hidden');
-                userDashboardContainer.classList.add('hidden');
-            }
-        });
-
-        setTimeout(() => {
-            document.getElementById('hero-slide-custom').classList.add('hero-slide-hidden');
-            document.getElementById('hero-slide-current').classList.remove('hero-slide-hidden');
-        }, 7000);
+      }
+      if (request.method === 'POST' && pathname === '/initialize-payment') return await handleInitialize(request, env);
+      if (request.method === 'POST' && pathname === '/verify-payment') return await handleVerify(request, env);
+      if (request.method === 'POST' && pathname === '/lookup-order') return await handleLookup(request, env);
+      if (request.method === 'POST' && pathname === '/webhook/paystack') return await handleWebhook(request, env);
+      return json(request, { ok: false, error: 'Not found.' }, 404);
+    } catch (error) {
+      console.error('worker_error', String(error && error.message));
+      return json(request, { ok: false, error: 'Something went wrong. Please try again.' }, 500);
+    }
+  }
+};
