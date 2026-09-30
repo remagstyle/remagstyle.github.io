@@ -11,11 +11,11 @@
             appId: "1:145831201308:web:489a014516356f73a72dd9"
         };
 
-        const ADMIN_UID = 'jDvJwjfMgoTU2oXXxmK2AwywrlN2';
-        const ADMIN_EMAIL = 'admin@remagstyle.com';
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const paymentWorkerUrl = 'https://remagstyle-paystack-worker.1realstranger.workers.dev';
+        const PAID_WORDS = ['paid', 'success', 'successful', 'confirmed'];
         const orderForm = document.getElementById('order-form');
         const orderFormMessage = document.getElementById('order-form-message');
         const ordersList = document.getElementById('orders-list');
@@ -137,6 +137,77 @@
             return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(date);
         }
 
+        function isPaidOrder(order) {
+            return PAID_WORDS.includes(String(order.paymentStatus || '').toLowerCase());
+        }
+
+        function formatMoney(value, currency) {
+            try { return new Intl.NumberFormat('en-GH', { style: 'currency', currency }).format(value); }
+            catch { return `${Number(value).toFixed(2)} ${currency}`; }
+        }
+
+        // The amount shown is the order's paymentAmount, the same field the payment server charges.
+        function renderPaymentBlock(order) {
+            const amount = Number(order.paymentAmount);
+            const currency = String(order.currency || 'GHS').trim().toUpperCase();
+            const hasAmount = Number.isFinite(amount) && amount > 0 && /^[A-Z]{3}$/.test(currency);
+            const paid = isPaidOrder(order);
+            const cancelled = ['cancelled', 'canceled'].includes(String(order.status || '').toLowerCase());
+            if (!hasAmount) {
+                return `<div class="mt-4 border-t border-brand-border pt-3 text-[11px] text-brand-muted"><p>Amount due<br><span class="text-brand-text">Pending. The atelier will confirm your price.</span></p></div>`;
+            }
+            const paidDate = order.paidAt ? new Date(order.paidAt) : null;
+            const paidLine = paid && Number.isFinite(Number(order.paidAmount))
+                ? `Received ${formatMoney(Number(order.paidAmount), String(order.paidCurrency || currency).toUpperCase())}${paidDate && !Number.isNaN(paidDate.getTime()) ? ` on ${paidDate.toLocaleDateString()}` : ''}`
+                : '';
+            const badge = paid ? 'Paid' : cancelled ? 'Cancelled' : 'Awaiting payment';
+            const canPay = !paid && !cancelled;
+            return `<div class="mt-4 border-t border-brand-border pt-3">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <p class="text-[10px] uppercase tracking-[0.18em] text-brand-muted">Amount due</p>
+                                <p class="mt-1 font-serif text-2xl text-brand-text">${escapeHtml(formatMoney(amount, currency))}</p>
+                                ${paidLine ? `<p class="mt-1 text-[11px] text-brand-muted">${escapeHtml(paidLine)}</p>` : ''}
+                            </div>
+                            <span class="border border-brand-border px-2 py-1 text-[9px] uppercase tracking-[0.15em] text-brand-muted">${badge}</span>
+                        </div>
+                        ${canPay ? `<button type="button" data-pay-order="${escapeHtml(order.id)}" class="mt-3 w-full bg-brand-text px-5 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-white hover:bg-black/80">Pay Now</button><p data-pay-error class="mt-3 hidden border border-red-200 bg-red-50 p-3 text-[11px] text-red-700" role="status"></p>` : ''}
+                    </div>`;
+        }
+
+        async function startPayment(button) {
+            const user = auth.currentUser;
+            const errorBox = button.closest('article')?.querySelector('[data-pay-error]');
+            const fail = (message) => { if (errorBox) { errorBox.textContent = message; errorBox.classList.remove('hidden'); } };
+            errorBox?.classList.add('hidden');
+            if (!user) { fail('Please log in again to pay.'); return; }
+            button.disabled = true;
+            button.textContent = 'Opening Paystack...';
+            try {
+                // Only the order id is sent. The amount is decided by the server from Firestore.
+                const token = await user.getIdToken();
+                const response = await fetch(`${paymentWorkerUrl}/initialize-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ orderId: button.dataset.payOrder })
+                });
+                const checkout = await response.json().catch(() => ({}));
+                if (!response.ok || !checkout.ok || !checkout.authorizationUrl) {
+                    throw new Error(checkout.error || 'We could not start payment. Please try again.');
+                }
+                const destination = new URL(checkout.authorizationUrl);
+                if (destination.protocol !== 'https:' || !destination.hostname.endsWith('paystack.com')) {
+                    throw new Error('We could not start payment. Please try again.');
+                }
+                window.location.assign(destination.toString());
+            } catch (error) {
+                button.disabled = false;
+                button.textContent = 'Pay Now';
+                fail(error.message || 'We could not start payment. Please try again.');
+                console.error('Unable to start Paystack checkout:', error);
+            }
+        }
+
         async function loadOrders(user) {
             ordersLoading.textContent = 'Loading...';
             try {
@@ -165,7 +236,8 @@
                             <p>Delivery<br><span class="text-brand-text">${escapeHtml(order.deliveryStatus)}</span></p>
                         </div>
                         ${order.adminMessage ? `<div class="mt-4 border-l-2 border-brand-text bg-brand-bg px-3 py-2 text-[11px] leading-5 text-brand-text"><span class="font-medium uppercase tracking-[0.12em]">Atelier update</span><br>${escapeHtml(order.adminMessage)}</div>` : ''}
-                        ${['Cancelled', 'Delivered'].includes(order.status) ? '' : `<button type="button" data-cancel-order="${escapeHtml(order.id)}" class="mt-4 border border-red-300 px-3 py-2 text-[10px] uppercase tracking-[0.15em] text-red-700 transition-colors hover:bg-red-700 hover:text-white">Cancel Order</button>`}
+                        ${renderPaymentBlock(order)}
+                        ${['Cancelled', 'Delivered'].includes(order.status) || isPaidOrder(order) ? '' : `<button type="button" data-cancel-order="${escapeHtml(order.id)}" class="mt-4 border border-red-300 px-3 py-2 text-[10px] uppercase tracking-[0.15em] text-red-700 transition-colors hover:bg-red-700 hover:text-white">Cancel Order</button>`}
                     </article>`;
                 }).join('') : '<p class="border border-dashed border-brand-border p-5 text-xs text-brand-muted">No orders yet. Submit your first bespoke request.</p>';
             } catch (error) {
@@ -176,6 +248,8 @@
         }
 
         ordersList.addEventListener('click', async (event) => {
+            const payButton = event.target.closest('[data-pay-order]');
+            if (payButton) { await startPayment(payButton); return; }
             const cancelButton = event.target.closest('[data-cancel-order]');
             if (!cancelButton) return;
             if (!window.confirm('Cancel this order request?')) return;
@@ -261,6 +335,10 @@
             mobileMenu.classList.add('hidden');
             mobileMenuBtn.setAttribute('aria-expanded', 'false');
         }));
+
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted && auth.currentUser) loadOrders(auth.currentUser);
+        });
 
         onAuthStateChanged(auth, (user) => {
             stopInactivityLogout?.();
