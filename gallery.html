@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery | REMAGSTYLE</title>
+    <meta name="description" content="Browse bespoke African fashion and modern couture from the REMAGSTYLE atelier in Accra.">
+    <link rel="icon" type="image/png" href="image/Logo.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { brand: { bg: '#F9F8F6', card: '#EFECE6', text: '#111111', muted: '#666666', border: '#E2DFD8' } },
+                    fontFamily: {
+                        serif: ['Cormorant Garamond', 'Playfair Display', 'Georgia', 'serif'],
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F9F8F6; color: #111111; -webkit-font-smoothing: antialiased; }
+        .font-serif { font-family: 'Cormorant Garamond', serif; }
+        ::-webkit-scrollbar { width: 5px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #F9F8F6; }
+        ::-webkit-scrollbar-thumb { background: #D1CDC6; border-radius: 9999px; }
+
+        @keyframes tile-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+        /* Pinterest-style tiles: each keeps its own proportions (set from the real photo size). */
+        .tile { position: relative; display: block; width: 100%; padding: 0; border: 0; cursor: zoom-in; overflow: hidden; border-radius: 12px; background: #EFECE6; aspect-ratio: var(--r, 0.8); animation: tile-rise .7s cubic-bezier(.16, 1, .3, 1) both; }
+        .tile.settled { animation: none; }
+        .tile img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.16, 1, .3, 1); }
+        .tile:hover img, .tile:focus-visible img { transform: scale(1.045); }
+        .tile:focus-visible { outline: 2px solid #111111; outline-offset: 3px; }
+        /* Instagram-style hover caption */
+        .tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0, 0, 0, .55), rgba(0, 0, 0, 0) 55%); opacity: 0; transition: opacity .35s; pointer-events: none; }
+        .tile-caption { position: absolute; left: 12px; right: 12px; bottom: 10px; z-index: 1; color: #fff; font-size: 12px; line-height: 1.4; text-align: left; opacity: 0; transform: translateY(6px); transition: opacity .35s, transform .35s; }
+        @media (hover: hover) {
+            .tile:hover::after, .tile:focus-visible::after { opacity: 1; }
+            .tile:hover .tile-caption, .tile:focus-visible .tile-caption { opacity: 1; transform: none; }
+        }
+        .tile-badge { position: absolute; top: 10px; right: 10px; z-index: 2; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9999px; background: rgba(17, 17, 17, .55); backdrop-filter: blur(4px); color: #fff; }
+        .skeleton { width: 100%; border-radius: 12px; aspect-ratio: var(--r, 0.8); background: linear-gradient(100deg, #EFECE6 30%, #F7F5F0 50%, #EFECE6 70%); background-size: 200% 100%; animation: shimmer 1.6s linear infinite; }
+        .chip { padding: 8px 18px; border: 1px solid #111111; border-radius: 9999px; font-size: 10px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: #111111; background: transparent; transition: background-color .25s, color .25s; }
+        .chip[aria-pressed="true"], .chip:hover { background: #111111; color: #fff; }
+
+        /* Full-screen viewer */
+        #lightbox { position: fixed; inset: 0; z-index: 60; display: none; flex-direction: column; background: rgba(10, 10, 10, .96); }
+        #lightbox.open { display: flex; }
+        .lb-stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 60px 16px 8px; }
+        .lb-stage img, .lb-stage video { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 6px; background: #000; }
+        .lb-btn { position: absolute; z-index: 2; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 9999px; background: rgba(255, 255, 255, .12); color: #fff; transition: background-color .2s; }
+        .lb-btn:hover, .lb-btn:focus-visible { background: rgba(255, 255, 255, .28); outline: none; }
+        .lb-info { flex: none; padding: 8px 20px 22px; text-align: center; color: #fff; }
+        @media (prefers-reduced-motion: reduce) {
+            .tile, .skeleton { animation: none; }
+            .tile img { transition: none; }
+        }
+    </style>
+</head>
+<body class="bg-brand-bg text-brand-text flex flex-col min-h-screen selection:bg-brand-text selection:text-white">
+
+    <header id="site-header" class="sticky top-0 z-40 bg-brand-bg border-b border-brand-border/60">
+        <nav class="px-4 md:px-8 lg:px-12 py-3.5 md:py-4 flex items-center justify-between">
+            <div class="md:hidden">
+                <button id="mobile-menu-btn" class="p-1.5 text-brand-text focus:outline-none" aria-label="Toggle navigation" aria-expanded="false">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
+                </button>
+            </div>
+            <a href="index.html" aria-label="REMAGSTYLE home" class="relative h-12 w-12 sm:h-14 sm:w-14 shrink-0">
+                <img src="image/Logo.png" alt="REMAGSTYLE" class="absolute left-1/2 top-1/2 z-10 h-32 w-32 -translate-x-1/2 -translate-y-1/2 scale-[1.69] object-contain sm:h-36 sm:w-36">
+            </a>
+            <div class="hidden md:flex items-center space-x-6 lg:space-x-8 text-[11px] lg:text-[12px] font-medium tracking-[0.18em] uppercase">
+                <a href="index.html" class="hover:opacity-50 transition-opacity">Home</a>
+                <a href="gallery.html" aria-current="page" class="border-b border-brand-text pb-0.5">Gallery</a>
+                <a href="track-order.html" class="hover:opacity-50 transition-opacity">Track Order</a>
+                <a href="index.html#footer" class="hover:opacity-50 transition-opacity">Contact</a>
+            </div>
+            <a href="appointment.html" class="text-[10px] font-medium tracking-[0.18em] uppercase border border-brand-text px-4 py-2 hover:bg-brand-text hover:text-white transition-colors">Book</a>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden border-t border-brand-border/40 bg-brand-bg px-5 py-4">
+            <div class="flex flex-col gap-4 text-[11px] font-medium tracking-[0.18em] uppercase">
+                <a href="index.html" class="hover:opacity-50 transition-opacity">Home</a>
+                <a href="gallery.html" aria-current="page" class="underline underline-offset-4">Gallery</a>
+                <a href="track-order.html" class="hover:opacity-50 transition-opacity">Track Order</a>
+                <a href="index.html#footer" class="hover:opacity-50 transition-opacity">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <main id="main" class="flex-1">
+        <section class="text-center max-w-2xl mx-auto px-4 pt-12 sm:pt-16 pb-8 space-y-2">
+            <span class="text-[10px] sm:text-xs tracking-[0.25em] uppercase font-light text-brand-muted">Atelier Archive</span>
+            <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-light text-brand-text">Gallery</h1>
+            <p class="text-xs sm:text-sm font-light text-brand-muted">Bespoke designs from our atelier in Accra. Tap any piece to see it larger.</p>
+        </section>
+
+        <div id="filters" class="hidden flex justify-center gap-2" role="group" aria-label="Filter the gallery">
+            <button type="button" class="chip" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="chip" data-filter="image" aria-pressed="false">Photos</button>
+            <button type="button" class="chip" data-filter="video" aria-pressed="false">Videos</button>
+        </div>
+        <p id="count" class="text-center text-[11px] tracking-[0.1em] text-brand-muted mt-3 mb-6 min-h-[1rem]" aria-live="polite"></p>
+
+        <div class="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-10 pb-16 sm:pb-24">
+            <div id="masonry" class="flex items-start gap-3 sm:gap-4" aria-busy="true"></div>
+            <noscript><p class="text-center text-sm text-brand-muted">Please turn on JavaScript to see the gallery.</p></noscript>
+            <div class="mt-12 text-center">
+                <a href="https://www.instagram.com/remagstyle/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center border border-brand-text px-6 py-3 text-[10px] font-medium tracking-[0.2em] uppercase text-brand-text transition-colors hover:bg-brand-text hover:text-white">Follow us on Instagram</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-brand-text text-white">
+        <div class="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] tracking-[0.15em] uppercase text-gray-300">
+            <p>&copy; <span id="year"></span> REMAGSTYLE. Crafted in Accra.</p>
+            <div class="flex flex-wrap justify-center gap-x-6 gap-y-2">
+                <a href="index.html" class="hover:text-white transition-colors">Home</a>
+                <a href="appointment.html" class="hover:text-white transition-colors">Book an Appointment</a>
+                <a href="https://wa.me/233547850142" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">WhatsApp</a>
+            </div>
+        </div>
+    </footer>
+
+    <div id="lightbox" role="dialog" aria-modal="true" aria-label="Gallery viewer">
+        <button id="lb-close" type="button" class="lb-btn right-3 top-3" aria-label="Close viewer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <button id="lb-prev" type="button" class="lb-btn left-3 top-1/2 -translate-y-1/2" aria-label="Previous">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <button id="lb-next" type="button" class="lb-btn right-3 top-1/2 -translate-y-1/2" aria-label="Next">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <div id="lb-stage" class="lb-stage"></div>
+        <div class="lb-info">
+            <p id="lb-caption" class="hidden mx-auto max-w-xl text-sm font-light leading-6"></p>
+            <p id="lb-count" class="mt-1 text-[10px] tracking-[0.2em] text-gray-400"></p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
+        const app = initializeApp({
+            apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o",
+            authDomain: "remagstyle-43b41.firebaseapp.com",
+            projectId: "remagstyle-43b41",
+            messagingSenderId: "145831201308",
+            appId: "1:145831201308:web:489a014516356f73a72dd9"
+        });
+        const db = getFirestore(app);
+        const $ = (id) => document.getElementById(id);
+
+        const BASE = 'https://res.cloudinary.com/hjsztwfj';
+        const ID_RE = /^remagstyle-gallery\/[a-f0-9]{32}$/;
+        const VIDEO_FORMATS = ['mp4', 'mov', 'webm', 'm4v'];
+        // Keep tiles tidy: very tall or very wide pieces are cropped a little in the grid (never in the viewer).
+        const clampRatio = (width, height) => Math.min(1.35, Math.max(0.75, width > 0 && height > 0 ? width / height : 0.8));
+
+        // Shown until the first photos are uploaded from the admin dashboard.
+        const FALLBACK = [[1, 1440, 1747, 'Atelier Creation'], [2, 1440, 1797, 'Custom Suit'], [3, 1440, 1797, 'Contemporary Design'], [4, 1280, 1597, 'Signature Look'], [5, 1440, 1797, 'Bespoke Creation'], [6, 1440, 1797, 'Evening Design']]
+            .map(([number, width, height, name]) => ({ kind: 'image', caption: '', alt: `REMAGSTYLE ${name}`, ratio: clampRatio(width, height), thumb: `image/${number}.jpg`, full: `image/${number}.jpg` }));
+
+        // Only well-formed gallery records are used; URLs are built from a validated id, never from free text.
+        function itemFromRecord(data) {
+            if (!data || !ID_RE.test(data.publicId)) return null;
+            const caption = typeof data.caption === 'string' ? data.caption.trim().slice(0, 80) : '';
+            const ratio = clampRatio(Number(data.width), Number(data.height));
+            if (data.resourceType === 'image') {
+                return { kind: 'image', caption, ratio,
+                    thumb: `${BASE}/image/upload/c_limit,w_600,f_auto,q_auto/${data.publicId}`,
+                    full: `${BASE}/image/upload/c_limit,w_1600,f_auto,q_auto/${data.publicId}` };
+            }
+            if (data.resourceType === 'video') {
+                const format = VIDEO_FORMATS.includes(data.format) ? data.format : 'mp4';
+                return { kind: 'video', caption, ratio,
+                    thumb: `${BASE}/video/upload/so_0,c_limit,w_600,f_jpg,q_auto/${data.publicId}.jpg`,
+                    full: `${BASE}/video/upload/f_auto,q_auto/${data.publicId}`,
+                    original: `${BASE}/video/upload/${data.publicId}.${format}` };
+            }
+            return null;
+        }
+
+        let items = [];
+        let visible = [];
+        let currentColumns = 0;
+        const tiles = new Map();
+        const masonry = $('masonry');
+
+        function makeTile(item, index) {
+            const tile = document.createElement('button');
+            tile.type = 'button';
+            tile.className = 'tile';
+            tile.style.setProperty('--r', item.ratio);
+            tile.style.animationDelay = `${Math.min(index, 12) * 40}ms`;
+            tile.addEventListener('animationend', () => tile.classList.add('settled'), { once: true });
+            tile.setAttribute('aria-label', `${item.kind === 'video' ? 'Play video' : 'View photo'}${item.caption ? `: ${item.caption}` : ''}`);
+            const picture = document.createElement('img');
+            picture.src = item.thumb;
+            picture.alt = item.alt || item.caption || 'REMAGSTYLE design';
+            picture.loading = 'lazy';
+            picture.decoding = 'async';
+            picture.addEventListener('error', () => picture.remove());
+            tile.append(picture);
+            if (item.kind === 'video') {
+                const badge = document.createElement('span');
+                badge.className = 'tile-badge';
+                badge.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+                tile.append(badge);
+            }
+            if (item.caption) {
+                const caption = document.createElement('span');
+                caption.className = 'tile-caption';
+                caption.textContent = item.caption;
+                tile.append(caption);
+            }
+            tile.addEventListener('click', () => openViewer(visible.indexOf(item)));
+            return tile;
+        }
+
+        const columnsFor = (width) => (width >= 1100 ? 4 : width >= 700 ? 3 : 2);
+
+        // Pinterest-style placement: each piece goes into the shortest column, so newest pieces fill the top row first.
+        function layout() {
+            const count = columnsFor(masonry.clientWidth);
+            masonry.replaceChildren();
+            const columns = Array.from({ length: count }, () => {
+                const column = document.createElement('div');
+                column.className = 'flex-1 min-w-0 flex flex-col gap-3 sm:gap-4';
+                masonry.append(column);
+                return column;
+            });
+            const heights = Array(count).fill(0);
+            for (const item of visible) {
+                let target = 0;
+                for (let index = 1; index < count; index += 1) if (heights[index] < heights[target] - 1e-9) target = index;
+                columns[target].append(tiles.get(item));
+                heights[target] += 1 / item.ratio + 0.05;
+            }
+            currentColumns = count;
+        }
+
+        function showSkeleton() {
+            const count = columnsFor(masonry.clientWidth);
+            const ratios = [0.8, 1.2, 0.9, 1.3, 0.75, 1.1, 0.85, 1];
+            masonry.replaceChildren();
+            const heights = Array(count).fill(0);
+            const columns = Array.from({ length: count }, () => {
+                const column = document.createElement('div');
+                column.className = 'flex-1 min-w-0 flex flex-col gap-3 sm:gap-4';
+                masonry.append(column);
+                return column;
+            });
+            for (let index = 0; index < count * 3; index += 1) {
+                const block = document.createElement('div');
+                block.className = 'skeleton';
+                block.style.setProperty('--r', ratios[index % ratios.length]);
+                const target = heights.indexOf(Math.min(...heights));
+                columns[target].append(block);
+                heights[target] += 1 / ratios[index % ratios.length];
+            }
+        }
+
+        function setFilter(kind) {
+            visible = kind === 'all' ? items : items.filter((item) => item.kind === kind);
+            document.querySelectorAll('.chip').forEach((chip) => chip.setAttribute('aria-pressed', String(chip.dataset.filter === kind)));
+            $('count').textContent = `${visible.length} ${visible.length === 1 ? 'piece' : 'pieces'}`;
+            layout();
+        }
+
+        // ---------- Full-screen viewer ----------
+        const lightbox = $('lightbox');
+        const stage = $('lb-stage');
+        let current = -1;
+        let lastFocus = null;
+
+        function showItem(index) {
+            current = (index + visible.length) % visible.length;
+            const item = visible[current];
+            stage.replaceChildren(); // also stops any video that was playing
+            let media;
+            if (item.kind === 'video') {
+                media = document.createElement('video');
+                media.controls = true;
+                media.playsInline = true;
+                media.preload = 'metadata'; // no autoplay and no big download until the visitor presses play
+                media.poster = item.thumb;
+                media.src = item.full;
+                let retried = false;
+                media.addEventListener('error', () => { if (!retried && item.original) { retried = true; media.src = item.original; } });
+            } else {
+                media = document.createElement('img');
+                media.alt = item.alt || item.caption || 'REMAGSTYLE design';
+                media.decoding = 'async';
+                media.src = item.full;
+                media.addEventListener('error', () => { if (!media.src.endsWith(item.thumb)) media.src = item.thumb; });
+            }
+            stage.append(media);
+            $('lb-caption').textContent = item.caption;
+            $('lb-caption').classList.toggle('hidden', !item.caption);
+            $('lb-count').textContent = `${current + 1} / ${visible.length}`;
+            const several = visible.length > 1;
+            $('lb-prev').classList.toggle('hidden', !several);
+            $('lb-next').classList.toggle('hidden', !several);
+            if (several) for (const step of [-1, 1]) {
+                const neighbour = visible[(current + step + visible.length) % visible.length];
+                if (neighbour.kind === 'image') new Image().src = neighbour.full; // load the next picture ahead of time
+            }
+        }
+
+        function openViewer(index) {
+            if (index < 0) return;
+            lastFocus = document.activeElement;
+            lightbox.classList.add('open');
+            document.body.style.overflow = 'hidden';
+            $('site-header').setAttribute('inert', '');
+            $('main').setAttribute('inert', '');
+            showItem(index);
+            $('lb-close').focus();
+        }
+
+        function closeViewer() {
+            stage.replaceChildren();
+            lightbox.classList.remove('open');
+            document.body.style.overflow = '';
+            $('site-header').removeAttribute('inert');
+            $('main').removeAttribute('inert');
+            current = -1;
+            if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+        }
+
+        $('lb-close').addEventListener('click', closeViewer);
+        $('lb-prev').addEventListener('click', () => showItem(current - 1));
+        $('lb-next').addEventListener('click', () => showItem(current + 1));
+        lightbox.addEventListener('click', (event) => { if (event.target === lightbox || event.target === stage) closeViewer(); });
+        document.addEventListener('keydown', (event) => {
+            if (!lightbox.classList.contains('open')) return;
+            if (event.key === 'Escape') closeViewer();
+            else if (event.key === 'ArrowLeft' && visible.length > 1) showItem(current - 1);
+            else if (event.key === 'ArrowRight' && visible.length > 1) showItem(current + 1);
+        });
+        let touchStart = null;
+        lightbox.addEventListener('touchstart', (event) => { touchStart = { x: event.touches[0].clientX, y: event.touches[0].clientY }; }, { passive: true });
+        lightbox.addEventListener('touchend', (event) => {
+            if (!touchStart || visible.length < 2) return;
+            const dx = event.changedTouches[0].clientX - touchStart.x;
+            const dy = event.changedTouches[0].clientY - touchStart.y;
+            touchStart = null;
+            if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) showItem(current + (dx < 0 ? 1 : -1));
+        }, { passive: true });
+
+        // ---------- Page setup ----------
+        document.querySelectorAll('.chip').forEach((chip) => chip.addEventListener('click', () => setFilter(chip.dataset.filter)));
+        $('year').textContent = new Date().getFullYear();
+        const menuButton = $('mobile-menu-btn');
+        menuButton.addEventListener('click', () => {
+            const open = $('mobile-menu').classList.toggle('hidden') === false;
+            menuButton.setAttribute('aria-expanded', String(open));
+        });
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => { if (columnsFor(masonry.clientWidth) !== currentColumns && visible.length) layout(); }, 120);
+        });
+
+        async function load() {
+            showSkeleton();
+            let uploaded = [];
+            try {
+                const snapshot = await getDocs(collection(db, 'gallery'));
+                uploaded = snapshot.docs
+                    .map((record) => ({ item: itemFromRecord(record.data()), time: record.data().createdAt?.toMillis?.() || 0 }))
+                    .filter((entry) => entry.item)
+                    .sort((first, second) => second.time - first.time)
+                    .map((entry) => entry.item);
+            } catch (error) {
+                console.error('The gallery could not be loaded; showing the original photos instead.', error);
+            }
+            items = uploaded.length ? uploaded : FALLBACK;
+            items.forEach((item, index) => tiles.set(item, makeTile(item, index)));
+            const kinds = new Set(items.map((item) => item.kind));
+            $('filters').classList.toggle('hidden', kinds.size < 2);
+            masonry.setAttribute('aria-busy', 'false');
+            setFilter('all');
+        }
+        load();
+    </script>
+</body>
+</html>
