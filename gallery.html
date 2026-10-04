@@ -50,6 +50,7 @@
         .skeleton { width: 100%; border-radius: 12px; aspect-ratio: var(--r, 0.8); background: linear-gradient(100deg, #EFECE6 30%, #F7F5F0 50%, #EFECE6 70%); background-size: 200% 100%; animation: shimmer 1.6s linear infinite; }
         .chip { padding: 8px 18px; border: 1px solid #111111; border-radius: 9999px; font-size: 10px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: #111111; background: transparent; transition: background-color .25s, color .25s; }
         .chip[aria-pressed="true"], .chip:hover { background: #111111; color: #fff; }
+        .chip:disabled { opacity: .35; cursor: not-allowed; background: transparent; color: #111111; }
 
         /* Full-screen viewer */
         #lightbox { position: fixed; inset: 0; z-index: 60; display: none; flex-direction: column; background: rgba(10, 10, 10, .96); }
@@ -102,6 +103,7 @@
             <p class="text-xs sm:text-sm font-light text-brand-muted">Bespoke designs from our atelier in Accra. Tap any piece to see it larger.</p>
         </section>
 
+        <div id="collections" class="hidden flex flex-wrap justify-center gap-2 px-4 mb-3" role="group" aria-label="Browse by collection"></div>
         <div id="filters" class="hidden flex justify-center gap-2" role="group" aria-label="Filter the gallery">
             <button type="button" class="chip" data-filter="all" aria-pressed="true">All</button>
             <button type="button" class="chip" data-filter="image" aria-pressed="false">Photos</button>
@@ -141,6 +143,7 @@
         </button>
         <div id="lb-stage" class="lb-stage"></div>
         <div class="lb-info">
+            <p id="lb-collection" class="hidden text-[10px] tracking-[0.25em] uppercase text-gray-400 mb-1"></p>
             <p id="lb-caption" class="hidden mx-auto max-w-xl text-sm font-light leading-6"></p>
             <p id="lb-count" class="mt-1 text-[10px] tracking-[0.2em] text-gray-400"></p>
         </div>
@@ -174,15 +177,16 @@
         function itemFromRecord(data) {
             if (!data || !ID_RE.test(data.publicId)) return null;
             const caption = typeof data.caption === 'string' ? data.caption.trim().slice(0, 80) : '';
+            const collectionId = typeof data.collectionId === 'string' && data.collectionId ? data.collectionId : null;
             const ratio = clampRatio(Number(data.width), Number(data.height));
             if (data.resourceType === 'image') {
-                return { kind: 'image', caption, ratio,
+                return { kind: 'image', caption, ratio, collectionId,
                     thumb: `${BASE}/image/upload/c_limit,w_600,f_auto,q_auto/${data.publicId}`,
                     full: `${BASE}/image/upload/c_limit,w_1600,f_auto,q_auto/${data.publicId}` };
             }
             if (data.resourceType === 'video') {
                 const format = VIDEO_FORMATS.includes(data.format) ? data.format : 'mp4';
-                return { kind: 'video', caption, ratio,
+                return { kind: 'video', caption, ratio, collectionId,
                     thumb: `${BASE}/video/upload/so_0,c_limit,w_600,f_jpg,q_auto/${data.publicId}.jpg`,
                     full: `${BASE}/video/upload/f_auto,q_auto/${data.publicId}`,
                     original: `${BASE}/video/upload/${data.publicId}.${format}` };
@@ -190,9 +194,15 @@
             return null;
         }
 
+        const NAME_MAX = 40;
+        const cleanName = (value) => (typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, NAME_MAX).trim() : '');
+
         let items = [];
         let visible = [];
         let currentColumns = 0;
+        let collectionList = []; // only collections that have at least one piece
+        let activeCollection = 'all';
+        let activeKind = 'all';
         const tiles = new Map();
         const masonry = $('masonry');
 
@@ -270,10 +280,44 @@
             }
         }
 
-        function setFilter(kind) {
-            visible = kind === 'all' ? items : items.filter((item) => item.kind === kind);
-            document.querySelectorAll('.chip').forEach((chip) => chip.setAttribute('aria-pressed', String(chip.dataset.filter === kind)));
+        const collectionLabel = (id) => (collectionList.find((entry) => entry.id === id) || {}).name || '';
+
+        function renderCollectionChips() {
+            const bar = $('collections');
+            bar.replaceChildren();
+            bar.classList.toggle('hidden', collectionList.length === 0);
+            const make = (id, text) => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'chip';
+                chip.dataset.collection = id;
+                chip.setAttribute('aria-pressed', String(activeCollection === id));
+                chip.textContent = text;
+                chip.addEventListener('click', () => { activeCollection = id; applyFilters(); });
+                bar.append(chip);
+            };
+            make('all', 'All');
+            for (const entry of collectionList) make(entry.id, entry.name);
+        }
+
+        function applyFilters() {
+            const inCollection = activeCollection === 'all' ? items : items.filter((item) => item.collectionId === activeCollection);
+            // A piece type with nothing in this collection is switched off, and we fall back to "all" if it was selected.
+            const kindsHere = new Set(inCollection.map((item) => item.kind));
+            document.querySelectorAll('#filters .chip').forEach((chip) => {
+                const kind = chip.dataset.filter;
+                chip.disabled = kind !== 'all' && !kindsHere.has(kind);
+            });
+            if (activeKind !== 'all' && !kindsHere.has(activeKind)) activeKind = 'all';
+            visible = activeKind === 'all' ? inCollection : inCollection.filter((item) => item.kind === activeKind);
+            document.querySelectorAll('#filters .chip').forEach((chip) => chip.setAttribute('aria-pressed', String(chip.dataset.filter === activeKind)));
+            document.querySelectorAll('#collections .chip').forEach((chip) => chip.setAttribute('aria-pressed', String(chip.dataset.collection === activeCollection)));
             $('count').textContent = `${visible.length} ${visible.length === 1 ? 'piece' : 'pieces'}`;
+            try {
+                const url = new URL(window.location.href);
+                if (activeCollection === 'all') url.searchParams.delete('collection'); else url.searchParams.set('collection', activeCollection);
+                window.history.replaceState(null, '', url);
+            } catch { /* address bar update is a nicety only */ }
             layout();
         }
 
@@ -305,6 +349,9 @@
                 media.addEventListener('error', () => { if (!media.src.endsWith(item.thumb)) media.src = item.thumb; });
             }
             stage.append(media);
+            const label = item.collectionId ? collectionLabel(item.collectionId) : '';
+            $('lb-collection').textContent = label;
+            $('lb-collection').classList.toggle('hidden', !label);
             $('lb-caption').textContent = item.caption;
             $('lb-caption').classList.toggle('hidden', !item.caption);
             $('lb-count').textContent = `${current + 1} / ${visible.length}`;
@@ -359,7 +406,7 @@
         }, { passive: true });
 
         // ---------- Page setup ----------
-        document.querySelectorAll('.chip').forEach((chip) => chip.addEventListener('click', () => setFilter(chip.dataset.filter)));
+        document.querySelectorAll('#filters .chip').forEach((chip) => chip.addEventListener('click', () => { if (chip.disabled) return; activeKind = chip.dataset.filter; applyFilters(); }));
         $('year').textContent = new Date().getFullYear();
         const menuButton = $('mobile-menu-btn');
         menuButton.addEventListener('click', () => {
@@ -372,25 +419,46 @@
             resizeTimer = setTimeout(() => { if (columnsFor(masonry.clientWidth) !== currentColumns && visible.length) layout(); }, 120);
         });
 
+        async function readList(name) {
+            try {
+                return (await getDocs(collection(db, name))).docs.map((record) => ({ id: record.id, data: record.data() }));
+            } catch (error) {
+                console.error(`Could not load "${name}".`, error);
+                return [];
+            }
+        }
+
         async function load() {
             showSkeleton();
-            let uploaded = [];
-            try {
-                const snapshot = await getDocs(collection(db, 'gallery'));
-                uploaded = snapshot.docs
-                    .map((record) => ({ item: itemFromRecord(record.data()), time: record.data().createdAt?.toMillis?.() || 0 }))
-                    .filter((entry) => entry.item)
-                    .sort((first, second) => second.time - first.time)
-                    .map((entry) => entry.item);
-            } catch (error) {
-                console.error('The gallery could not be loaded; showing the original photos instead.', error);
+            const [galleryRecords, collectionRecords] = await Promise.all([readList('gallery'), readList('galleryCollections')]);
+            const names = new Map();
+            for (const record of collectionRecords) {
+                const name = cleanName(record.data.name);
+                if (name) names.set(record.id, name);
             }
+            const uploaded = galleryRecords
+                .map((record) => {
+                    const item = itemFromRecord(record.data);
+                    // A piece pointing at a missing or deleted collection simply shows under "All".
+                    if (item && item.collectionId && !names.has(item.collectionId)) item.collectionId = null;
+                    return { item, time: record.data.createdAt?.toMillis?.() || 0 };
+                })
+                .filter((entry) => entry.item)
+                .sort((first, second) => second.time - first.time)
+                .map((entry) => entry.item);
             items = uploaded.length ? uploaded : FALLBACK;
             items.forEach((item, index) => tiles.set(item, makeTile(item, index)));
+            // Only collections that actually contain something are shown to visitors.
+            const used = new Set(items.map((item) => item.collectionId).filter(Boolean));
+            collectionList = Array.from(names, ([id, name]) => ({ id, name })).filter((entry) => used.has(entry.id))
+                .sort((first, second) => first.name.localeCompare(second.name, undefined, { sensitivity: 'base' }));
+            const wanted = new URLSearchParams(window.location.search).get('collection');
+            if (wanted && collectionList.some((entry) => entry.id === wanted)) activeCollection = wanted;
             const kinds = new Set(items.map((item) => item.kind));
             $('filters').classList.toggle('hidden', kinds.size < 2);
             masonry.setAttribute('aria-busy', 'false');
-            setFilter('all');
+            renderCollectionChips();
+            applyFilters();
         }
         load();
     </script>
