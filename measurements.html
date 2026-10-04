@@ -45,6 +45,24 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
         const draft = JSON.parse(sessionStorage.getItem('remagstyle-order-draft') || 'null');
+        // Only photos that this signed-in client uploaded for this order are accepted from the draft.
+        const PHOTO_ID_RE = /^remagstyle-inspiration\/([A-Za-z0-9]{1,128})\/[a-f0-9]{32}$/;
+        const PHOTO_FORMATS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'heic', 'heif'];
+        const plainNumber = (value) => (typeof value === 'number' && Number.isFinite(value) ? value : null);
+        function draftPhotos(userId) {
+            if (!userId || !Array.isArray(draft?.inspirationPhotos)) return [];
+            return draft.inspirationPhotos.flatMap((photo) => {
+                const match = PHOTO_ID_RE.exec(String(photo?.publicId || ''));
+                if (!match || match[1] !== userId) return [];
+                return [{
+                    publicId: photo.publicId,
+                    format: PHOTO_FORMATS.includes(photo.format) ? photo.format : 'jpg',
+                    width: plainNumber(photo.width),
+                    height: plainNumber(photo.height),
+                    bytes: plainNumber(photo.bytes)
+                }];
+            }).slice(0, 3);
+        }
         const intro = document.getElementById('measurement-intro');
         const fields = document.getElementById('measurement-fields');
         const form = document.getElementById('measurements-form');
@@ -332,6 +350,7 @@
                         inspirationLinks: Array.isArray(draft.inspirationLinks)
                             ? draft.inspirationLinks
                             : draft.inspirationLinks?.split('\n').filter(Boolean) || [],
+                        inspirationPhotos: draftPhotos(userId),
                         status: 'Received',
                         deliveryStatus: 'To be confirmed',
                         createdAt: serverTimestamp()
