@@ -1,0 +1,8 @@
+# RemagStyle robots.txt
+# Everything is crawlable on purpose. Private pages (client dashboard, account, tracking,
+# measurements, guest order) carry a "noindex" tag; blocking them here would stop Google
+# from seeing that tag.
+User-agent: *
+Allow: /
+
+Sitemap: https://remag.style/sitemap.xml

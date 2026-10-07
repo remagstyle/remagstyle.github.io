@@ -5,7 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gallery | REMAGSTYLE</title>
     <meta name="description" content="Browse bespoke African fashion and modern couture from the REMAGSTYLE atelier in Accra.">
+    <link rel="canonical" href="https://remag.style/gallery.html">
     <link rel="icon" type="image/png" href="image/Logo.png">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Gallery | RemagStyle">
+    <meta property="og:description" content="Browse bespoke African fashion and modern couture from the RemagStyle atelier in Accra.">
+    <meta property="og:url" content="https://remag.style/gallery.html">
+    <meta property="og:site_name" content="RemagStyle">
+    <meta property="og:image" content="https://remag.style/image/hero.jpg">
+    <meta property="og:image:alt" content="Model wearing a black gown with a Kente-print bodice panel and layered skirt, posed in front of African masks and crafts">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Gallery | RemagStyle">
+    <meta name="twitter:description" content="Browse bespoke African fashion and modern couture from the RemagStyle atelier in Accra.">
+    <meta name="twitter:image" content="https://remag.style/image/hero.jpg">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -170,8 +182,8 @@
         const clampRatio = (width, height) => Math.min(1.35, Math.max(0.75, width > 0 && height > 0 ? width / height : 0.8));
 
         // Shown until the first photos are uploaded from the admin dashboard.
-        const FALLBACK = [[1, 1440, 1747, 'Atelier Creation'], [2, 1440, 1797, 'Custom Suit'], [3, 1440, 1797, 'Contemporary Design'], [4, 1280, 1597, 'Signature Look'], [5, 1440, 1797, 'Bespoke Creation'], [6, 1440, 1797, 'Evening Design']]
-            .map(([number, width, height, name]) => ({ kind: 'image', caption: '', alt: `REMAGSTYLE ${name}`, ratio: clampRatio(width, height), thumb: `image/${number}.jpg`, full: `image/${number}.jpg` }));
+        const FALLBACK = [[1, 1440, 1747, 'Man wearing a gold and black patterned tailored jacket with matching shorts'], [2, 1080, 1074, 'Woman in a pink and red patterned dress with a ruffled shoulder'], [3, 1440, 1797, 'Woman in a short red sequined dress with sheer lace sleeves'], [4, 1280, 1597, 'Woman in a cream corset-style gown with a sheer tulle train, holding dried flowers'], [5, 1440, 1797, 'Smiling woman in an orange satin dress and a magenta head wrap'], [6, 1440, 1797, 'Man in a white traditional outfit with an orange embroidered front panel']]
+            .map(([number, width, height, name]) => ({ kind: 'image', caption: '', alt: name, ratio: clampRatio(width, height), thumb: `image/${number}.jpg`, full: `image/${number}.jpg` }));
 
         // Only well-formed gallery records are used; URLs are built from a validated id, never from free text.
         function itemFromRecord(data) {

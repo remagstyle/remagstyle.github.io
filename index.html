@@ -3,8 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REMAGSTYLE</title>
+    <title>RemagStyle | Bespoke Fashion &amp; Custom Tailoring in Accra, Ghana</title>
+    <meta name="description" content="RemagStyle is an Accra-based luxury fashion house specializing in bespoke African fashion, modern Kente garments, custom tailoring, and couture designs.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://remag.style/">
     <link rel="icon" type="image/png" href="image/Logo.png">
+
+    <!-- Open Graph / social sharing -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="RemagStyle | Bespoke Fashion &amp; Custom Tailoring in Accra, Ghana">
+    <meta property="og:description" content="Bespoke African fashion, modern Kente garments, and custom-tailored designs crafted in Accra, Ghana.">
+    <meta property="og:url" content="https://remag.style/">
+    <meta property="og:site_name" content="RemagStyle">
+    <meta property="og:image" content="https://remag.style/image/hero.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1440">
+    <meta property="og:image:height" content="1799">
+    <meta property="og:image:alt" content="Model wearing a black gown with a Kente-print bodice panel and layered skirt, posed in front of African masks and crafts">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="RemagStyle | Bespoke Fashion &amp; Custom Tailoring in Accra, Ghana">
+    <meta name="twitter:description" content="Bespoke African fashion, modern Kente garments, and custom-tailored designs crafted in Accra, Ghana.">
+    <meta name="twitter:image" content="https://remag.style/image/hero.jpg">
+    <meta name="twitter:image:alt" content="Model wearing a black gown with a Kente-print bodice panel and layered skirt, posed in front of African masks and crafts">
+
+    <!-- Structured data: only details that are published on this site -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "ClothingStore",
+        "@id": "https://remag.style/#business",
+        "name": "RemagStyle",
+        "url": "https://remag.style/",
+        "logo": "https://remag.style/image/Logo.png",
+        "image": "https://remag.style/image/hero.jpg",
+        "description": "Accra-based luxury fashion house specializing in bespoke African fashion, modern Kente garments, custom tailoring, and couture designs.",
+        "telephone": "+233547850142",
+        "email": "hello@remagstyle.com",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Nii Kwatei Apuano Ave",
+            "addressLocality": "Accra",
+            "addressCountry": "GH"
+        },
+        "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": 5.538972,
+            "longitude": -0.332139
+        },
+        "openingHoursSpecification": [
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+                "opens": "09:00",
+                "closes": "18:00"
+            }
+        ],
+        "sameAs": [
+            "https://www.instagram.com/remagstyle/",
+            "https://www.facebook.com/remagstyle/"
+        ]
+    }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -182,7 +241,7 @@
             </div>
 
             <a href="#" aria-label="REMAGSTYLE home" class="relative h-12 w-12 sm:h-14 sm:w-14 shrink-0">
-                <img src="image/Logo.png" alt="REMAGSTYLE" fetchpriority="high" decoding="async" class="absolute left-1/2 top-1/2 z-10 h-32 w-32 -translate-x-1/2 -translate-y-1/2 scale-[1.69] object-contain sm:h-36 sm:w-36" />
+                <img src="image/Logo.png" alt="REMAGSTYLE" width="1024" height="1024" fetchpriority="high" decoding="async" class="absolute left-1/2 top-1/2 z-10 h-32 w-32 -translate-x-1/2 -translate-y-1/2 scale-[1.69] object-contain sm:h-36 sm:w-36" />
             </a>
 
             <div class="hidden md:flex items-center space-x-6 lg:space-x-8 text-[11px] lg:text-[12px] font-medium tracking-[0.18em] uppercase text-brand-text">
@@ -218,7 +277,8 @@
                             src="image/hero.jpg" 
                             fetchpriority="high"
                             decoding="async"
-                    alt="REMAGSTYLE Luxury Collection" 
+                    alt="Model wearing a black gown with a Kente-print bodice panel and layered skirt, posed in front of African masks and crafts" 
+                    width="1440" height="1799"
                     class="hero-image-motion w-full h-full object-cover object-top filter brightness-[0.97]"
                 />
                 <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/30 to-black/10"></div>
@@ -232,7 +292,7 @@
                         </div>
                         <div id="hero-slide-current" class="hero-slide hero-slide-hidden">
                             <p class="text-[10px] sm:text-xs tracking-[0.25em] uppercase font-light text-brand-text/80">ACCRA / GHANA</p>
-                            <h1 class="mt-3 font-serif text-3xl sm:text-5xl lg:text-6xl font-light leading-[1.15] text-brand-text">Your Style.<br/>Your Story.</h1>
+                            <p class="mt-3 font-serif text-3xl sm:text-5xl lg:text-6xl font-light leading-[1.15] text-brand-text">Your Style.<br/>Your Story.</p>
                             <p class="mt-3 text-xs sm:text-base font-light text-brand-text/80 max-w-sm">
                                 REMAGSTYLE is an Accra-based luxury couture house specializing in bespoke African fashion, modern Kente garments, and custom tailored designs.
                             </p>
@@ -262,18 +322,18 @@
 
             <div id="gallery-grid" class="gallery-marquee" aria-label="Gallery carousel">
                 <div class="gallery-track">
-                    <div class="gallery-slide-item"><img src="image/1.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Atelier Creation" /></div>
-                    <div class="gallery-slide-item"><img src="image/2.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Custom Suit" /></div>
-                    <div class="gallery-slide-item"><img src="image/3.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Contemporary Design" /></div>
-                    <div class="gallery-slide-item"><img src="image/4.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Signature Look" /></div>
-                    <div class="gallery-slide-item"><img src="image/5.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Bespoke Creation" /></div>
-                    <div class="gallery-slide-item"><img src="image/6.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Evening Design" /></div>
-                    <div class="gallery-slide-item"><img src="image/1.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Atelier Creation" /></div>
-                    <div class="gallery-slide-item"><img src="image/2.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Custom Suit" /></div>
-                    <div class="gallery-slide-item"><img src="image/3.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Contemporary Design" /></div>
-                    <div class="gallery-slide-item"><img src="image/4.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Signature Look" /></div>
-                    <div class="gallery-slide-item"><img src="image/5.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Bespoke Creation" /></div>
-                    <div class="gallery-slide-item"><img src="image/6.jpg" loading="lazy" decoding="async" alt="REMAGSTYLE Evening Design" /></div>
+                    <div class="gallery-slide-item"><img src="image/1.jpg" loading="lazy" decoding="async" alt="Man wearing a gold and black patterned tailored jacket with matching shorts" /></div>
+                    <div class="gallery-slide-item"><img src="image/2.jpg" loading="lazy" decoding="async" alt="Woman in a pink and red patterned dress with a ruffled shoulder" /></div>
+                    <div class="gallery-slide-item"><img src="image/3.jpg" loading="lazy" decoding="async" alt="Woman in a short red sequined dress with sheer lace sleeves" /></div>
+                    <div class="gallery-slide-item"><img src="image/4.jpg" loading="lazy" decoding="async" alt="Woman in a cream corset-style gown with a sheer tulle train, holding dried flowers" /></div>
+                    <div class="gallery-slide-item"><img src="image/5.jpg" loading="lazy" decoding="async" alt="Smiling woman in an orange satin dress and a magenta head wrap" /></div>
+                    <div class="gallery-slide-item"><img src="image/6.jpg" loading="lazy" decoding="async" alt="Man in a white traditional outfit with an orange embroidered front panel" /></div>
+                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/1.jpg" loading="lazy" decoding="async" alt="" /></div>
+                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/2.jpg" loading="lazy" decoding="async" alt="" /></div>
+                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/3.jpg" loading="lazy" decoding="async" alt="" /></div>
+                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/4.jpg" loading="lazy" decoding="async" alt="" /></div>
+                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/5.jpg" loading="lazy" decoding="async" alt="" /></div>
+                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/6.jpg" loading="lazy" decoding="async" alt="" /></div>
                 </div>
             </div>
 
@@ -293,7 +353,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
                 <div class="sm:col-span-2 lg:col-span-1">
                     <a href="#" aria-label="REMAGSTYLE home" class="inline-flex items-center">
-                        <img src="image/Logo.png" alt="REMAGSTYLE" loading="lazy" decoding="async" class="h-28 w-28 object-contain" />
+                        <img src="image/Logo.png" alt="REMAGSTYLE" width="1024" height="1024" loading="lazy" decoding="async" class="h-28 w-28 object-contain" />
                     </a>
                     <p class="mt-4 max-w-xs text-xs leading-6 text-gray-400">
                         Bespoke African fashion and modern couture, crafted in Accra for stories worth wearing.
