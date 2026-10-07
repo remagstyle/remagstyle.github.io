@@ -69,11 +69,15 @@
         }
         .hero-slide { inset: 56px 0 0; position: absolute; transition: opacity 0.8s ease, transform 0.8s ease; }
         .hero-slide-hidden { opacity: 0; pointer-events: none; transform: translateY(12px); }
-        .hero-typing-line { border-right: 2px solid currentColor; display: block; overflow: hidden; white-space: nowrap; width: 0; }
-        .hero-typing-first { animation: typing-line 1.8s steps(13, end) forwards, typing-caret 0.8s 0.8s step-end infinite; }
-        .hero-typing-second { animation: typing-line 1.2s 2.8s steps(7, end) forwards, typing-caret 0.8s 3.6s step-end infinite; }
-        @keyframes typing-line { from { width: 0; } to { width: 100%; } }
-        @keyframes typing-caret { 50% { border-color: transparent; } }
+        /* Headline: each line rises out of its own mask, one after the other, then the underline draws under "DESIGNER". */
+        .hero-line { display: block; overflow: hidden; padding: 0.04em 0 0.14em; margin-bottom: -0.1em; }
+        .hero-line-inner { display: inline-block; transform: translateY(115%); opacity: 0; animation: hero-line-rise 1.05s var(--d, 0s) cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .hero-emphasis { font-style: italic; font-weight: 500; letter-spacing: 0.02em; position: relative; display: inline-block; }
+        .hero-emphasis::after { content: ''; position: absolute; left: 0; right: 0; bottom: -0.04em; height: 2px; background: rgba(255, 255, 255, 0.85); transform: scaleX(0); transform-origin: left center; animation: hero-underline 0.9s 1.35s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+        .hero-mark { display: inline-block; opacity: 0; transform: translateY(0.25em); animation: hero-mark-in 0.6s 1.15s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes hero-line-rise { from { transform: translateY(115%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes hero-underline { to { transform: scaleX(1); } }
+        @keyframes hero-mark-in { to { opacity: 1; transform: none; } }
         #gallery-grid > div { animation: gallery-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
         #gallery-grid > div:nth-child(2) { animation-delay: 0.12s; }
         #gallery-grid > div:nth-child(3) { animation-delay: 0.24s; }
@@ -148,7 +152,8 @@
         @media (prefers-reduced-motion: reduce) {
             .hero-image-motion, .hero-copy-motion, #gallery-grid > div, #footer > div, .gallery-track { animation: none; }
             .hero-slide, .hero-slide-hidden { transition: none; transform: none; }
-            .hero-typing-line { animation: none; border-color: transparent; width: auto; }
+            .hero-line-inner, .hero-mark { animation: none; opacity: 1; transform: none; }
+            .hero-emphasis::after { animation: none; transform: scaleX(1); }
         }
     </style>
 </head>
@@ -223,7 +228,7 @@
                 <div class="hero-copy-motion max-w-xs sm:max-w-lg lg:max-w-xl">
                     <div id="hero-slider" class="hero-slider">
                         <div id="hero-slide-custom" class="hero-slide">
-                            <h1 class="font-serif text-2xl font-semibold leading-[1.15] text-brand-text sm:text-4xl lg:text-5xl"><span class="hero-typing-line hero-typing-first">NEED A CUSTOM</span><span class="hero-typing-line hero-typing-second">TAYLOR ?</span></h1>
+                            <h1 aria-label="Need a custom designer?" class="font-serif text-2xl font-semibold leading-[1.15] text-brand-text sm:text-4xl lg:text-5xl"><span class="hero-line" aria-hidden="true"><span class="hero-line-inner" style="--d:0.1s">NEED A CUSTOM</span></span><span class="hero-line" aria-hidden="true"><span class="hero-line-inner" style="--d:0.35s"><span class="hero-emphasis">DESIGNER</span> <span class="hero-mark">?</span></span></span></h1>
                         </div>
                         <div id="hero-slide-current" class="hero-slide hero-slide-hidden">
                             <p class="text-[10px] sm:text-xs tracking-[0.25em] uppercase font-light text-brand-text/80">ACCRA / GHANA</p>
