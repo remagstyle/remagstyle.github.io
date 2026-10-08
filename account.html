@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8TBKRB31MY"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        // Privacy: report only the page path, never the query string or hash. Those can hold
+        // private order numbers, payment references or client document tokens.
+        gtag('config', 'G-8TBKRB31MY', {
+            page_location: location.origin + location.pathname,
+            page_referrer: (function () { try { var r = new URL(document.referrer); return r.origin + r.pathname; } catch (e) { return ''; } })()
+        });
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Client Account | REMAGSTYLE</title>

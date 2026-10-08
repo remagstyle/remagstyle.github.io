@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8TBKRB31MY"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        // Privacy: report only the page path, never the query string or hash. Those can hold
+        // private order numbers, payment references or client document tokens.
+        gtag('config', 'G-8TBKRB31MY', {
+            page_location: location.origin + location.pathname,
+            page_referrer: (function () { try { var r = new URL(document.referrer); return r.origin + r.pathname; } catch (e) { return ''; } })()
+        });
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RemagStyle Gallery | Bespoke African Fashion &amp; Couture in Ghana</title>
@@ -184,6 +198,7 @@
         const clampRatio = (width, height) => Math.min(1.35, Math.max(0.75, width > 0 && height > 0 ? width / height : 0.8));
 
         // Shown until the first photos are uploaded from the admin dashboard.
+        let galleryViewSent = false;
         const FALLBACK = [[1, 1440, 1747, 'Man wearing a gold and black patterned tailored jacket with matching shorts'], [2, 1080, 1074, 'Woman in a pink and red patterned dress with a ruffled shoulder'], [3, 1440, 1797, 'Woman in a short red sequined dress with sheer lace sleeves'], [4, 1280, 1597, 'Woman in a cream corset-style gown with a sheer tulle train, holding dried flowers'], [5, 1440, 1797, 'Smiling woman in an orange satin dress and a magenta head wrap'], [6, 1440, 1797, 'Man in a white traditional outfit with an orange embroidered front panel']]
             .map(([number, width, height, name]) => ({ kind: 'image', caption: '', alt: name, ratio: clampRatio(width, height), thumb: `image/${number}.jpg`, full: `image/${number}.jpg` }));
 
@@ -473,8 +488,25 @@
             masonry.setAttribute('aria-busy', 'false');
             renderCollectionChips();
             applyFilters();
+            if (!galleryViewSent && typeof gtag === 'function') { galleryViewSent = true; try { gtag('event', 'view_gallery', { item_count: items.length }); } catch (error) { /* analytics must never affect the page */ } }
         }
         load();
+    </script>
+    <script>
+        // GA4: counts taps on public contact links. Only the channel name is sent, never the number, address or link.
+        document.addEventListener('click', function (event) {
+            try {
+                var link = event.target.closest && event.target.closest('a[href]');
+                if (!link || typeof gtag !== 'function') return;
+                var href = link.getAttribute('href') || '';
+                var method = href.indexOf('tel:') === 0 ? 'phone'
+                    : href.indexOf('mailto:') === 0 ? 'email'
+                    : /^https:\/\/wa\.me\//.test(href) ? 'whatsapp'
+                    : /^https:\/\/www\.instagram\.com\//.test(href) ? 'instagram'
+                    : /^https:\/\/www\.facebook\.com\//.test(href) ? 'facebook' : '';
+                if (method) gtag('event', 'contact_click', { method: method });
+            } catch (error) { /* analytics must never affect the page */ }
+        }, true);
     </script>
 </body>
 </html>
