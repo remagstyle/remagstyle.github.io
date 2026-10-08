@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book an Appointment | REMAGSTYLE</title>
-    <meta name="description" content="Book a private consultation with the RemagStyle atelier in Accra to discuss your garment, measurements, fabric, and occasion.">
+    <title>Book a Tailoring Appointment | RemagStyle Accra</title>
+    <meta name="description" content="Book a bespoke fashion and custom tailoring appointment with RemagStyle in Accra, Ghana. Start your custom garment journey with our fashion house.">
     <link rel="canonical" href="https://remag.style/appointment.html">
     <link rel="icon" type="image/png" href="image/Logo.png">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Book an Appointment | RemagStyle">
-    <meta property="og:description" content="Book a private consultation with the RemagStyle atelier in Accra to discuss your garment, measurements, fabric, and occasion.">
+    <meta property="og:title" content="Book a Tailoring Appointment | RemagStyle Accra">
+    <meta property="og:description" content="Book a bespoke fashion and custom tailoring appointment with RemagStyle in Accra, Ghana.">
     <meta property="og:url" content="https://remag.style/appointment.html">
     <meta property="og:site_name" content="RemagStyle">
-    <meta property="og:image" content="https://remag.style/image/hero.jpg">
-    <meta property="og:image:alt" content="Model wearing a black gown with a Kente-print bodice panel and layered skirt, posed in front of African masks and crafts">
+    <meta property="og:image" content="https://remag.style/image/hero2.jpg">
+    <meta property="og:image:alt" content="Woman in an orange sequined corset gown admiring a beaded red and pink garment on a tailor's mannequin">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Book an Appointment | RemagStyle">
-    <meta name="twitter:description" content="Book a private consultation with the RemagStyle atelier in Accra to discuss your garment, measurements, fabric, and occasion.">
-    <meta name="twitter:image" content="https://remag.style/image/hero.jpg">
+    <meta name="twitter:title" content="Book a Tailoring Appointment | RemagStyle Accra">
+    <meta name="twitter:description" content="Book a bespoke fashion and custom tailoring appointment with RemagStyle in Accra, Ghana.">
+    <meta name="twitter:image" content="https://remag.style/image/hero2.jpg">
+    <meta name="twitter:image:alt" content="Woman in an orange sequined corset gown admiring a beaded red and pink garment on a tailor's mannequin">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -81,13 +82,13 @@
     <main class="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-5 py-10 sm:px-8 sm:py-16 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20 lg:px-12">
         <section class="relative overflow-hidden rounded-xl bg-[#D6D2CA] px-6 py-10 shadow-[0_36px_84px_rgba(0,0,0,0.58)] sm:px-10 sm:py-16 lg:py-20">
             <div class="absolute inset-0">
-                <img src="image/hero2.jpg" alt="REMAGSTYLE Luxury Collection" fetchpriority="high" decoding="async" class="appointment-image-motion h-full w-full object-cover object-[65%] brightness-[0.97]">
+                <img src="image/hero2.jpg" alt="Woman in an orange sequined corset gown admiring a beaded red and pink garment on a tailor's mannequin" width="1440" height="1799" fetchpriority="high" decoding="async" class="appointment-image-motion h-full w-full object-cover object-[65%] brightness-[0.97]">
                 <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/30 to-black/10"></div>
             </div>
             <div class="relative z-10 text-reveal">
                 <p class="text-[10px] font-medium uppercase tracking-[0.25em] text-white/90">Accra / Ghana</p>
-                <h1 class="mt-3 font-serif text-5xl font-light leading-none text-white sm:text-6xl">Let us tailor time for you.</h1>
-                <p class="mt-6 max-w-md text-sm font-bold leading-7 text-white">Book a private consultation with the REMAGSTYLE atelier to discuss your garment, measurements, fabric, and occasion.</p>
+                <h1 class="mt-3 font-serif text-5xl font-light leading-none text-white sm:text-6xl">Book a bespoke tailoring appointment.</h1>
+                <p class="mt-6 max-w-md text-sm font-bold leading-7 text-white">Let us tailor time for you. Book a private consultation with the REMAGSTYLE atelier to discuss your garment, measurements, fabric, and occasion.</p>
                 <div class="mt-10 border-l-2 border-white/80 pl-4 text-xs font-bold leading-6 tracking-wide text-white drop-shadow-sm">
                 <p>Appointments are available Monday - Saturday.</p>
                 <p>9:00 - 18:00, Accra, Ghana.</p>
@@ -98,21 +99,21 @@
         <section>
             <div class="mb-6">
                 <p class="text-[10px] font-medium uppercase tracking-[0.25em] text-brand-muted">Private Consultation</p>
-                <h2 class="mt-1 font-serif text-3xl font-light">Request an appointment</h2>
+                <h2 id="appointment-heading" class="mt-1 font-serif text-3xl font-light">Request a custom tailoring appointment</h2>
             </div>
-            <form id="appointment-form" class="space-y-5 border border-brand-border bg-white p-5 sm:p-8">
+            <form id="appointment-form" aria-labelledby="appointment-heading" class="space-y-5 border border-brand-border bg-white p-5 sm:p-8">
                 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div>
                         <label for="appointment-name" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Full name</label>
-                        <input type="text" id="appointment-name" required placeholder="Your name" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
+                        <input type="text" id="appointment-name" autocomplete="name" required placeholder="Your name" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
                     </div>
                     <div>
                         <label for="appointment-email" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Email</label>
-                        <input type="email" id="appointment-email" required placeholder="name@example.com" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
+                        <input type="email" id="appointment-email" autocomplete="email" required placeholder="name@example.com" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
                     </div>
                     <div>
                         <label for="appointment-phone" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Mobile number</label>
-                        <input type="tel" id="appointment-phone" required placeholder="+233 00 000 0000" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
+                        <input type="tel" id="appointment-phone" autocomplete="tel" required placeholder="+233 00 000 0000" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
                     </div>
                 </div>
 
@@ -122,7 +123,7 @@
                 </div>
 
                 <button type="submit" class="w-full bg-brand-text py-3.5 text-[10px] font-medium uppercase tracking-[0.2em] text-white transition-colors hover:bg-black/80">Send Appointment Request</button>
-                <p id="appointment-message-status" class="hidden p-3 text-[11px]"></p>
+                <p id="appointment-message-status" role="status" aria-live="polite" class="hidden p-3 text-[11px]"></p>
             </form>
         </section>
     </main>

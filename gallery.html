@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gallery | REMAGSTYLE</title>
-    <meta name="description" content="Browse bespoke African fashion and modern couture from the REMAGSTYLE atelier in Accra.">
+    <title>RemagStyle Gallery | Bespoke African Fashion &amp; Couture in Ghana</title>
+    <meta name="description" content="Explore the RemagStyle gallery featuring bespoke African fashion, modern Kente garments, couture designs, and custom tailoring from Accra, Ghana.">
     <link rel="canonical" href="https://remag.style/gallery.html">
     <link rel="icon" type="image/png" href="image/Logo.png">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Gallery | RemagStyle">
-    <meta property="og:description" content="Browse bespoke African fashion and modern couture from the RemagStyle atelier in Accra.">
+    <meta property="og:title" content="RemagStyle Gallery | Bespoke African Fashion &amp; Couture in Ghana">
+    <meta property="og:description" content="Explore bespoke African fashion, modern Kente garments, couture designs, and custom tailoring from RemagStyle in Accra, Ghana.">
     <meta property="og:url" content="https://remag.style/gallery.html">
     <meta property="og:site_name" content="RemagStyle">
-    <meta property="og:image" content="https://remag.style/image/hero.jpg">
-    <meta property="og:image:alt" content="Model wearing a black gown with a Kente-print bodice panel and layered skirt, posed in front of African masks and crafts">
+    <meta property="og:image" content="https://remag.style/image/1.jpg">
+    <meta property="og:image:alt" content="Man wearing a gold and black patterned tailored jacket with matching shorts">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Gallery | RemagStyle">
-    <meta name="twitter:description" content="Browse bespoke African fashion and modern couture from the RemagStyle atelier in Accra.">
-    <meta name="twitter:image" content="https://remag.style/image/hero.jpg">
+    <meta name="twitter:title" content="RemagStyle Gallery | Bespoke African Fashion &amp; Couture in Ghana">
+    <meta name="twitter:description" content="Explore bespoke African fashion, modern Kente garments, couture designs, and custom tailoring from RemagStyle in Accra, Ghana.">
+    <meta name="twitter:image" content="https://remag.style/image/1.jpg">
+    <meta name="twitter:image:alt" content="Man wearing a gold and black patterned tailored jacket with matching shorts">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -111,8 +112,9 @@
     <main id="main" class="flex-1">
         <section class="text-center max-w-2xl mx-auto px-4 pt-12 sm:pt-16 pb-8 space-y-2">
             <span class="text-[10px] sm:text-xs tracking-[0.25em] uppercase font-light text-brand-muted">Atelier Archive</span>
-            <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-light text-brand-text">Gallery</h1>
+            <h1 class="font-serif text-4xl sm:text-5xl lg:text-6xl font-light text-brand-text">RemagStyle Fashion Gallery</h1>
             <p class="text-xs sm:text-sm font-light text-brand-muted">Bespoke designs from our atelier in Accra. Tap any piece to see it larger.</p>
+            <p class="text-xs sm:text-sm font-light text-brand-muted">Return to the <a href="index.html" class="underline underline-offset-4 hover:opacity-50 transition-opacity">RemagStyle home page</a>, or <a href="appointment.html" class="underline underline-offset-4 hover:opacity-50 transition-opacity">book a custom tailoring appointment</a> in Accra.</p>
         </section>
 
         <div id="collections" class="hidden flex flex-wrap justify-center gap-2 px-4 mb-3" role="group" aria-label="Browse by collection"></div>
@@ -228,7 +230,7 @@
             tile.setAttribute('aria-label', `${item.kind === 'video' ? 'Play video' : 'View photo'}${item.caption ? `: ${item.caption}` : ''}`);
             const picture = document.createElement('img');
             picture.src = item.thumb;
-            picture.alt = item.alt || item.caption || 'REMAGSTYLE design';
+            picture.alt = item.alt || item.caption || `RemagStyle design ${index + 1}`;
             picture.loading = 'lazy';
             picture.decoding = 'async';
             picture.addEventListener('error', () => picture.remove());
