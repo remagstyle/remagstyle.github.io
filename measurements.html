@@ -41,6 +41,10 @@
         <section class="mt-8 border border-brand-border bg-white p-5 sm:p-8">
             <form id="measurements-form" class="space-y-5">
                 <h2 id="measurement-stage-title" class="font-serif text-2xl font-light">Measurements</h2>
+                <button type="button" id="size-chart-btn" class="hidden items-center gap-2 border border-brand-border px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-brand-text transition-colors hover:bg-brand-text hover:text-white" aria-haspopup="dialog" aria-controls="size-chart-modal">
+                    <span aria-hidden="true" class="flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px] leading-none">?</span>
+                    Don't know measurements
+                </button>
                 <div id="measurement-fields" class="grid grid-cols-1 gap-4 sm:grid-cols-2"></div>
                 <div class="flex gap-3">
                     <button type="button" id="measurements-back-btn" class="w-1/3 border border-brand-text py-3.5 text-[10px] font-medium uppercase tracking-[0.2em] text-brand-text transition-colors hover:bg-brand-text hover:text-white">Back</button>
@@ -51,6 +55,17 @@
             </form>
         </section>
     </main>
+    <div id="size-chart-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="size-chart-title">
+        <div class="relative flex max-h-[92vh] w-full max-w-3xl flex-col bg-white shadow-xl">
+            <div class="flex items-center justify-between border-b border-brand-border px-5 py-3">
+                <h2 id="size-chart-title" class="font-serif text-xl font-light">Size chart</h2>
+                <button type="button" id="size-chart-close" class="px-2 text-2xl leading-none text-brand-muted hover:text-brand-text" aria-label="Close size chart">&times;</button>
+            </div>
+            <div class="overflow-auto p-3 sm:p-5">
+                <div id="size-chart-body" class="overflow-x-auto"></div>
+            </div>
+        </div>
+    </div>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
         import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
@@ -319,6 +334,85 @@
             };
 
             renderStage();
+
+            // "Don't know measurements" help: shows the size chart that matches the selected gender.
+            // A row with `note` instead of `values` spans every size column; a row with `section` is a group heading.
+            const sizeCharts = {
+                Male: {
+                    title: "Men's regular sizes (inches)",
+                    sizes: ['34R', '36R', '38R', '40R', '42R', '44R', '46R', '48R'],
+                    rows: [
+                        { section: 'For torso' },
+                        { label: '1. Chest circumference', values: ['34', '36', '38', '40', '42', '44', '46', '48'] },
+                        { label: '2. Waist circumference', values: ['28', '30', '32', '34', '36', '39', '42', '44'] },
+                        { label: '3. Hip circumference', values: ['34', '36', '38', '40', '42', '44', '46', '48'] },
+                        { label: '4. Front interscye', values: ['14', '14½', '15', '15½', '16', '16½', '17', '17½'] },
+                        { label: '5. Back interscye', values: ['15', '15½', '16', '16½', '17', '17½', '18', '18½'] },
+                        { label: '6. Back waist length', values: ['17½', '17¾', '18', '18¼', '18½', '18¾', '19', '19¼'] },
+                        { label: '7. Shoulder to shoulder', values: ['16¼', '16¾', '17¼', '17¾', '18¼', '18¾', '19¼', '19¾'] },
+                        { label: '8. Shoulder length', values: ['6', '6⅛', '6¼', '6⅜', '6½', '6⅝', '6¾', '6⅞'] },
+                        { label: '9. Neck circumference', values: ['14', '14½', '15', '15½', '16', '16½', '17', '17½'] },
+                        { label: '10. Arm length', values: ['24⅝', '24¾', '24⅞', '25', '25⅛', '25¼', '25⅜', '25½'] },
+                        { label: '11. Bicep circumference', values: ['11¼', '12', '12¾', '13½', '14¼', '15', '15¾', '16½'] },
+                        { label: '12. Wrist circumference', values: ['6½', '6¾', '7', '7¼', '7½', '7¾', '8', '8¼'] },
+                        { label: '13. Height', values: ['', '', '', '', '', '', '', ''] },
+                        { section: 'For pants' },
+                        { label: '14. Pant-waist circumference', note: 'Waist circumference + 1"' },
+                        { label: '15. Crotch depth', values: ['9¾', '9⅞', '10', '10⅛', '10¼', '10⅜', '10½', '10⅝'] },
+                        { label: '16. Inseam length', values: ['32', '32', '32', '32', '32', '32', '32', '32'] },
+                        { label: '17. Outseam length', values: ['41¾', '41⅞', '42', '42⅛', '42¼', '42⅜', '42½', '42⅝'] }
+                    ]
+                },
+                Female: {
+                    title: "Women's size chart (inches)",
+                    sizes: ['8', '10', '12', '14', '16', '18', '20'],
+                    rows: [
+                        { label: 'Bust', values: ['35', '35', '37', '39', '43', '45', '47'] },
+                        { label: 'Waist', values: ['26', '28', '30', '33', '35', '37', '39'] },
+                        { label: 'Hip', values: ['36', '38', '42', '46', '48', '50', '52'] },
+                        { label: 'Shoulder to shoulder', values: ['16', '16', '16', '17', '17', '17.5', '18'] },
+                        { label: 'Shoulder to waist', values: ['16', '16.5', '17', '17.5', '18', '18.5', '19'] },
+                        { label: 'Around arm', values: ['12', '13', '14', '15', '16.5', '17.5', '18.5'] }
+                    ]
+                }
+            };
+            const renderSizeChart = (chart) => {
+                const cell = 'border border-brand-border px-2.5 py-2 text-center text-xs tabular-nums whitespace-nowrap';
+                const labelCell = 'sticky left-0 border border-brand-border bg-white px-2.5 py-2 text-left text-xs font-medium';
+                const head = `<tr class="bg-brand-bg"><th scope="col" class="${labelCell} bg-brand-bg uppercase tracking-[0.12em] text-[10px] text-brand-muted">Measurement</th>${chart.sizes.map((size) => `<th scope="col" class="${cell} font-medium">${size}</th>`).join('')}</tr>`;
+                const body = chart.rows.map((row) => {
+                    if (row.section) return `<tr class="bg-brand-bg"><th scope="colgroup" colspan="${chart.sizes.length + 1}" class="border border-brand-border px-2.5 py-2 text-left text-[10px] font-medium uppercase tracking-[0.18em] text-brand-muted">${row.section}</th></tr>`;
+                    const cells = row.note
+                        ? `<td colspan="${chart.sizes.length}" class="${cell}">${row.note}</td>`
+                        : row.values.map((value) => `<td class="${cell}">${value}</td>`).join('');
+                    return `<tr><th scope="row" class="${labelCell}">${row.label}</th>${cells}</tr>`;
+                }).join('');
+                return `<table class="w-full border-collapse"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+            };
+            const sizeChart = sizeCharts[draft.gender];
+            const sizeChartButton = document.getElementById('size-chart-btn');
+            const sizeChartModal = document.getElementById('size-chart-modal');
+            if (sizeChart) {
+                const closeSizeChart = () => {
+                    sizeChartModal.classList.add('hidden');
+                    sizeChartModal.classList.remove('flex');
+                    document.body.classList.remove('overflow-hidden');
+                    sizeChartButton.focus();
+                };
+                document.getElementById('size-chart-body').innerHTML = renderSizeChart(sizeChart);
+                document.getElementById('size-chart-title').textContent = sizeChart.title;
+                sizeChartButton.classList.remove('hidden');
+                sizeChartButton.classList.add('inline-flex');
+                sizeChartButton.addEventListener('click', () => {
+                    sizeChartModal.classList.remove('hidden');
+                    sizeChartModal.classList.add('flex');
+                    document.body.classList.add('overflow-hidden');
+                    document.getElementById('size-chart-close').focus();
+                });
+                document.getElementById('size-chart-close').addEventListener('click', closeSizeChart);
+                sizeChartModal.addEventListener('click', (event) => { if (event.target === sizeChartModal) closeSizeChart(); });
+                document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !sizeChartModal.classList.contains('hidden')) closeSizeChart(); });
+            }
 
             document.getElementById('measurements-back-btn').addEventListener('click', () => {
                 if (isBridal && currentStage === 'horizontal') {

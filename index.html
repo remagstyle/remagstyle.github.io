@@ -117,10 +117,6 @@
         ::-webkit-scrollbar-thumb { background: #D1CDC6; border-radius: 9999px; }
         .drawer-overlay { transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .drawer-content { transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes hero-image-drift {
-            from { transform: scale(1.02) translate3d(0, 0, 0); }
-            to { transform: scale(1.07) translate3d(-1%, -0.5%, 0); }
-        }
         @keyframes soft-rise {
             from { opacity: 0; transform: translateY(18px); }
             to { opacity: 1; transform: translateY(0); }
@@ -133,7 +129,6 @@
             from { opacity: 0; transform: translateY(14px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .hero-image-motion { animation: hero-image-drift 13.5s ease-in-out infinite alternate; }
         .hero-copy-motion { animation: soft-rise 0.9s 0.2s cubic-bezier(0.16, 1, 0.3, 1) both; }
         .hero-copy-motion h1, .hero-copy-motion p { color: #ffffff; text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); }
         .hero-slider { min-height: 290px; position: relative; }
@@ -223,7 +218,7 @@
         }
         #footer > div { animation: footer-fade 1.1s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both; }
         @media (prefers-reduced-motion: reduce) {
-            .hero-image-motion, .hero-copy-motion, #gallery-grid > div, #footer > div, .gallery-track { animation: none; }
+            .hero-copy-motion, #gallery-grid > div, #footer > div, .gallery-track { animation: none; }
             .hero-slide, .hero-slide-hidden { transition: none; transform: none; }
             .hero-line-inner, .hero-mark { animation: none; opacity: 1; transform: none; }
             .hero-emphasis::after { animation: none; transform: scaleX(1); }
@@ -288,12 +283,12 @@
         <section class="relative w-full min-h-[460px] sm:min-h-[540px] md:min-h-[620px] lg:h-[calc(100vh-100px)] flex items-center bg-[#D6D2CA] overflow-hidden">
             <div class="absolute inset-0 z-0">
                 <img 
-                            src="image/hero.jpg" 
+                            src="image/hero.jpeg"
                             fetchpriority="high"
                             decoding="async"
-                    alt="Model wearing a black gown with a Kente-print bodice panel and layered skirt, posed in front of African masks and crafts" 
-                    width="1440" height="1799"
-                    class="hero-image-motion w-full h-full object-cover object-top filter brightness-[0.97]"
+                    alt="Model wearing a white embellished dress beside a matching bridal gown on a mannequin"
+                    width="853" height="845"
+                    class="w-full h-full object-cover object-top filter brightness-[0.97]"
                 />
                 <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/30 to-black/10"></div>
             </div>
@@ -336,7 +331,7 @@
 
             <div id="gallery-grid" class="gallery-marquee" aria-label="Gallery carousel">
                 <div class="gallery-track">
-                    <div class="gallery-slide-item"><img src="image/1.jpg" loading="lazy" decoding="async" alt="Man wearing a gold and black patterned tailored jacket with matching shorts" /></div>
+                    <div class="gallery-slide-item"><img src="image/hero.jpeg" loading="lazy" decoding="async" alt="Model wearing a white embellished dress beside a matching bridal gown on a mannequin" /></div>
                     <div class="gallery-slide-item"><img src="image/2.jpg" loading="lazy" decoding="async" alt="Woman in a pink and red patterned dress with a ruffled shoulder" /></div>
                     <div class="gallery-slide-item"><img src="image/3.jpg" loading="lazy" decoding="async" alt="Woman in a short red sequined dress with sheer lace sleeves" /></div>
                     <div class="gallery-slide-item"><img src="image/4.jpg" loading="lazy" decoding="async" alt="Woman in a cream corset-style gown with a sheer tulle train, holding dried flowers" /></div>
