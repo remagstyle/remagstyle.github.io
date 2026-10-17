@@ -32,12 +32,54 @@ body.site-theme header {
     right: 1.25rem;
     bottom: 5rem;
     z-index: 50;
-    width: 16rem;
+    width: max-content;
+    min-width: 0;
     max-width: calc(100vw - 2.5rem);
     max-height: calc(100vh - 7rem);
     overflow-y: auto;
-    border-radius: 0.5rem;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 1rem;
+    background-color: transparent !important;
+    -webkit-backdrop-filter: blur(18px) saturate(150%) !important;
+    backdrop-filter: blur(18px) saturate(150%) !important;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.42), 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-menu-icons {
+    display: none;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+}
+
+.mobile-menu-floating .mobile-menu-navbar {
+    display: none;
+}
+
+.mobile-menu-floating .mobile-menu-icons {
+    display: flex;
+    color: #ffffff;
+}
+
+.mobile-menu-icons a,
+.mobile-menu-icons button {
+    display: flex;
+    width: 2.75rem;
+    height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+}
+
+.mobile-menu-icons a:hover,
+.mobile-menu-icons button:hover {
+    background-color: rgba(17, 17, 17, 0.08);
+}
+
+.mobile-menu-icons svg {
+    width: 1.25rem;
+    height: 1.25rem;
 }
 
 @media (max-width: 767px) {

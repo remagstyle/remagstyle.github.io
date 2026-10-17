@@ -84,9 +84,17 @@
     </header>
 
     <div id="mobile-menu" class="hidden border-t border-brand-border/40 bg-brand-bg px-5 py-4 lg:hidden">
-        <div class="flex flex-col gap-4 text-[10px] font-medium uppercase tracking-[0.18em]">
+        <div class="mobile-menu-navbar flex flex-col gap-4 text-[10px] font-medium uppercase tracking-[0.18em]">
             <a href="index.html" class="mobile-menu-link transition-opacity hover:opacity-50">Back to site</a>
             <button type="button" class="signout-btn w-fit border border-brand-text px-4 py-2 transition-colors hover:bg-brand-text hover:text-white">Sign Out</button>
+        </div>
+        <div class="mobile-menu-icons">
+            <a href="index.html" class="mobile-menu-link" aria-label="Back to site" title="Back to site">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m3.5 10 8.5-7 8.5 7"/><path d="M5.5 9v11h13V9M9.5 20v-6h5v6"/></svg>
+            </a>
+            <button type="button" class="signout-btn" aria-label="Sign out" title="Sign out">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M10 4H5.75A1.75 1.75 0 0 0 4 5.75v12.5A1.75 1.75 0 0 0 5.75 20H10"/><path d="M14 8l4 4-4 4m4-4H9"/></svg>
+            </button>
         </div>
     </div>
 
