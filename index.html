@@ -22,6 +22,13 @@
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="https://remag.style/">
     <link rel="icon" type="image/png" href="image/Logo.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#111111">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="RemagStyle">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <!-- Open Graph / social sharing -->
     <meta property="og:type" content="website">
@@ -393,6 +400,8 @@
                         <a href="gallery.html" class="hover:text-gray-400 transition-colors">Explore Gallery</a>
                         <a href="appointment.html" class="hover:text-gray-400 transition-colors">Book an Appointment</a>
                         <a href="mailto:remagstyle00@gmail.com?subject=Remagstyle%20Enquiry" class="hover:text-gray-400 transition-colors">General Enquiries</a>
+                        <button id="install-app-btn" type="button" hidden class="text-left hover:text-gray-400 transition-colors">Add to home screen</button>
+                        <p id="install-hint" hidden class="max-w-[14rem] text-xs leading-5 text-gray-400">On iPhone, tap the Share icon, then Add to Home Screen.</p>
                     </div>
                 </div>
             </div>
@@ -491,6 +500,63 @@
         </div>
     </div>
 
+    <!-- Mobile navigation: standalone so it still works if the Firebase scripts fail to load -->
+    <script>
+    (function () {
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const floatingMobileMenuBtn = document.getElementById('floating-mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+        const mobileNav = document.querySelector('header nav');
+        function updateMobileNavigation() {
+            const navBottom = mobileNav.getBoundingClientRect().bottom;
+            const mobileNavHidden = navBottom <= 0;
+            mobileMenu.style.setProperty('--menu-top', (Math.max(navBottom, 0) + 8) + 'px');
+            floatingMobileMenuBtn.classList.toggle('is-visible', mobileNavHidden);
+            mobileMenu.classList.toggle('mobile-menu-floating', mobileNavHidden);
+        }
+
+        // Mobile Navigation
+        mobileMenuBtn.addEventListener('click', () => {
+            const isOpen = !mobileMenu.classList.contains('hidden');
+            mobileMenu.classList.toggle('hidden', isOpen);
+            mobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
+            floatingMobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
+        });
+        floatingMobileMenuBtn.addEventListener('click', () => {
+            const isOpen = !mobileMenu.classList.contains('hidden');
+            mobileMenu.classList.toggle('hidden', isOpen);
+            mobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
+            floatingMobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
+        });
+
+        mobileMenuLinks.forEach((link) => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+                mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                floatingMobileMenuBtn.setAttribute('aria-expanded', 'false');
+            });
+        });
+        function closeMobileMenu() {
+            mobileMenu.classList.add('hidden');
+            mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            floatingMobileMenuBtn.setAttribute('aria-expanded', 'false');
+        }
+        document.addEventListener('click', (event) => {
+            if (mobileMenu.classList.contains('hidden')) return;
+            if (mobileMenu.contains(event.target) || mobileMenuBtn.contains(event.target) || floatingMobileMenuBtn.contains(event.target)) return;
+            closeMobileMenu();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !mobileMenu.classList.contains('hidden')) closeMobileMenu();
+        });
+        window.addEventListener('scroll', updateMobileNavigation, { passive: true });
+        window.addEventListener('resize', updateMobileNavigation);
+        updateMobileNavigation();
+        window.addEventListener('load', updateMobileNavigation);
+    })();
+    </script>
+
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
@@ -518,18 +584,6 @@
         const db = getFirestore(app);
 
         // UI Elements
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const floatingMobileMenuBtn = document.getElementById('floating-mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
-        const mobileNav = document.querySelector('header nav');
-        function updateMobileNavigation() {
-            const navBottom = mobileNav.getBoundingClientRect().bottom;
-            const mobileNavHidden = navBottom <= 0;
-            mobileMenu.style.setProperty('--menu-top', (Math.max(navBottom, 0) + 8) + 'px');
-            floatingMobileMenuBtn.classList.toggle('is-visible', mobileNavHidden);
-            mobileMenu.classList.toggle('mobile-menu-floating', mobileNavHidden);
-        }
 
         const accountDrawer = document.getElementById('account-drawer');
         const accountOverlay = document.getElementById('account-overlay');
@@ -626,43 +680,6 @@
             }
         }
 
-        // Mobile Navigation
-        mobileMenuBtn.addEventListener('click', () => {
-            const isOpen = !mobileMenu.classList.contains('hidden');
-            mobileMenu.classList.toggle('hidden', isOpen);
-            mobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
-            floatingMobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
-        });
-        floatingMobileMenuBtn.addEventListener('click', () => {
-            const isOpen = !mobileMenu.classList.contains('hidden');
-            mobileMenu.classList.toggle('hidden', isOpen);
-            mobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
-            floatingMobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
-        });
-
-        mobileMenuLinks.forEach((link) => {
-            link.addEventListener('click', () => {
-                mobileMenu.classList.add('hidden');
-                mobileMenuBtn.setAttribute('aria-expanded', 'false');
-                floatingMobileMenuBtn.setAttribute('aria-expanded', 'false');
-            });
-        });
-        function closeMobileMenu() {
-            mobileMenu.classList.add('hidden');
-            mobileMenuBtn.setAttribute('aria-expanded', 'false');
-            floatingMobileMenuBtn.setAttribute('aria-expanded', 'false');
-        }
-        document.addEventListener('click', (event) => {
-            if (mobileMenu.classList.contains('hidden')) return;
-            if (mobileMenu.contains(event.target) || mobileMenuBtn.contains(event.target) || floatingMobileMenuBtn.contains(event.target)) return;
-            closeMobileMenu();
-        });
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape' && !mobileMenu.classList.contains('hidden')) closeMobileMenu();
-        });
-        window.addEventListener('scroll', updateMobileNavigation, { passive: true });
-        window.addEventListener('resize', updateMobileNavigation);
-        updateMobileNavigation();
 
         // Drawer Controls
         let lastFocusedElement = null;
@@ -794,6 +811,26 @@
             }
         });
 
+    </script>
+    <script>
+        // Install as an app: service worker + "Add to home screen" link
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+        }
+        (function () {
+            var btn = document.getElementById('install-app-btn'), hint = document.getElementById('install-hint');
+            var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+            if (standalone) return;
+            var deferred = null;
+            window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; btn.hidden = false; });
+            window.addEventListener('appinstalled', function () { btn.hidden = true; hint.hidden = true; deferred = null; });
+            var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+            if (ios) btn.hidden = false;
+            btn.addEventListener('click', function () {
+                if (deferred) { deferred.prompt(); deferred.userChoice.then(function () { deferred = null; btn.hidden = true; }); }
+                else { hint.hidden = !hint.hidden; }
+            });
+        })();
     </script>
     <script>
         // GA4: counts taps on public contact links. Only the channel name is sent, never the number, address or link.
