@@ -1,0 +1,20 @@
+body.site-theme {
+    background-color: #fbf9f3;
+    background-image:
+        radial-gradient(ellipse at 100% 0%, rgba(210, 177, 96, 0.16), transparent 38%),
+        linear-gradient(125deg, #ffffff 0%, #fbf9f3 58%, #eee2c3 100%) !important;
+    background-attachment: fixed;
+}
+
+body.site-theme header {
+    background-color: rgba(255, 255, 255, 0.86) !important;
+    border-color: rgba(184, 146, 55, 0.24) !important;
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+}
+
+@media print {
+    body.site-theme {
+        background: #ffffff !important;
+    }
+}
