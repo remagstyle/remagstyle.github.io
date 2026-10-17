@@ -502,8 +502,7 @@
                 var method = href.indexOf('tel:') === 0 ? 'phone'
                     : href.indexOf('mailto:') === 0 ? 'email'
                     : /^https:\/\/wa\.me\//.test(href) ? 'whatsapp'
-                    : /^https:\/\/www\.instagram\.com\//.test(href) ? 'instagram'
-                    : /^https:\/\/www\.facebook\.com\//.test(href) ? 'facebook' : '';
+                    : /^https:\/\/www\.instagram\.com\//.test(href) ? 'instagram' : '';
                 if (method) gtag('event', 'contact_click', { method: method });
             } catch (error) { /* analytics must never affect the page */ }
         }, true);

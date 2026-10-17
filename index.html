@@ -73,8 +73,7 @@
             }
         ],
         "sameAs": [
-            "https://www.instagram.com/remagstyle/",
-            "https://www.facebook.com/remagstyle/"
+            "https://www.instagram.com/remagstyle/"
         ]
     }
     </script>
@@ -368,7 +367,6 @@
                     <h3 class="text-[10px] tracking-[0.2em] uppercase text-gray-400">Follow Us</h3>
                     <div class="mt-4 flex flex-col items-start gap-3 text-xs text-gray-200">
                         <a href="https://www.instagram.com/remagstyle/" target="_blank" rel="noopener noreferrer" class="hover:text-gray-400 transition-colors">Instagram</a>
-                        <a href="https://www.facebook.com/remagstyle/" target="_blank" rel="noopener noreferrer" class="hover:text-gray-400 transition-colors">Facebook</a>
                         <a href="https://wa.me/233547850142" target="_blank" rel="noopener noreferrer" class="hover:text-gray-400 transition-colors">WhatsApp</a>
                     </div>
                 </div>
@@ -476,59 +474,6 @@
                     <p id="user-display-email" class="text-[11px] font-light text-brand-muted">email@domain.com</p>
                 </div>
 
-                <div class="mt-6">
-                            <div class="flex items-end justify-between gap-4 mb-4">
-                        <div>
-                            <span class="text-[9px] tracking-[0.25em] uppercase text-brand-muted font-medium">Bespoke Orders</span>
-                            <h4 class="font-serif text-2xl text-brand-text">Create an order</h4>
-                        </div>
-                        <span class="text-[10px] text-brand-muted">Private client dashboard</span>
-                    </div>
-
-                    <form id="order-form" class="space-y-4">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <label for="order-garment" class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Garment</label>
-                                <select id="order-garment" required class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text">
-                                    <option value="">Select a garment</option>
-                                    <option>Custom Suit</option>
-                                    <option>Kente Ensemble</option>
-                                    <option>Evening Wear</option>
-                                    <option>Bridal Couture</option>
-                                    <option>Other Bespoke Design</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="order-occasion" class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Occasion</label>
-                                <input type="text" id="order-occasion" required placeholder="Wedding, gala, ceremony" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label for="order-notes" class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Design brief</label>
-                            <textarea id="order-notes" required rows="3" placeholder="Tell us about the silhouette, fabric, colors, and finish you have in mind." class="w-full resize-y bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text"></textarea>
-                        </div>
-
-                        <div>
-                            <p class="block text-[10px] tracking-[0.2em] uppercase mb-2 text-brand-muted">Measurements (cm)</p>
-                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                <input type="number" min="1" step="0.1" id="measurement-chest" required placeholder="Chest" aria-label="Chest measurement" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
-                                <input type="number" min="1" step="0.1" id="measurement-waist" required placeholder="Waist" aria-label="Waist measurement" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
-                                <input type="number" min="1" step="0.1" id="measurement-shoulder" required placeholder="Shoulder" aria-label="Shoulder measurement" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
-                                <input type="number" min="1" step="0.1" id="measurement-length" required placeholder="Length" aria-label="Garment length measurement" class="w-full bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label for="order-inspiration" class="block text-[10px] tracking-[0.2em] uppercase mb-1 text-brand-muted">Inspiration links</label>
-                            <textarea id="order-inspiration" rows="2" placeholder="Paste Instagram, Pinterest, or image links (one per line)." class="w-full resize-y bg-white border border-brand-border px-3.5 py-2.5 text-xs focus:outline-none focus:border-brand-text"></textarea>
-                        </div>
-
-                        <button type="submit" class="w-full py-3 bg-brand-text text-white text-[10px] font-medium tracking-[0.2em] uppercase hover:bg-black/80">Place Order Request</button>
-                    </form>
-                    <p id="order-form-message" class="hidden mt-3 p-3 text-[11px]"></p>
-                </div>
-
                 <div class="mt-8">
                     <div class="flex items-end justify-between gap-4 mb-4">
                         <div>
@@ -560,7 +505,7 @@
             onAuthStateChanged, 
             updateProfile 
         } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-        import { getFirestore, doc, setDoc, addDoc, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { startInactivityLogout } from "./auth-inactivity.js";
 
         const firebaseConfig = {
@@ -602,8 +547,6 @@
 
         const userDisplayName = document.getElementById('user-display-name');
         const userDisplayEmail = document.getElementById('user-display-email');
-        const orderForm = document.getElementById('order-form');
-        const orderFormMessage = document.getElementById('order-form-message');
         const ordersList = document.getElementById('orders-list');
         const ordersLoading = document.getElementById('orders-loading');
 
@@ -625,13 +568,6 @@
                 authSuccessToast.classList.add('hidden');
                 authSuccessToast.textContent = '';
             }, 10000);
-        }
-
-        function showOrderMessage(message, isError = false) {
-            orderFormMessage.textContent = message;
-            orderFormMessage.className = isError
-                ? 'mt-3 p-3 text-[11px] bg-red-50 border border-red-200 text-red-700'
-                : 'mt-3 p-3 text-[11px] bg-green-50 border border-green-200 text-green-700';
         }
 
         function escapeHtml(value) {
@@ -675,7 +611,7 @@
                             </div>
                         </article>`;
                     }).join('')
-                    : '<p class="border border-dashed border-brand-border p-4 text-xs text-brand-muted">No orders yet. Submit your first bespoke request above.</p>';
+                    : '<p class="border border-dashed border-brand-border p-4 text-xs text-brand-muted">No orders yet. Create your first request from the client dashboard.</p>';
             } catch (error) {
                 ordersLoading.textContent = '';
                 ordersList.innerHTML = '<p class="border border-red-200 bg-red-50 p-4 text-xs text-red-700">We could not load your orders right now.</p>';
@@ -772,49 +708,6 @@
             }
         });
 
-        orderForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const user = auth.currentUser;
-            if (!user) {
-                showOrderMessage('Please sign in before placing an order.', true);
-                return;
-            }
-
-            const submitButton = orderForm.querySelector('button[type="submit"]');
-            submitButton.disabled = true;
-            submitButton.textContent = 'Submitting...';
-
-            try {
-                await addDoc(collection(db, 'orders'), {
-                    orderNumber: `RS-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
-                    userId: user.uid,
-                    customerEmail: user.email,
-                    garment: document.getElementById('order-garment').value,
-                    occasion: document.getElementById('order-occasion').value.trim(),
-                    designBrief: document.getElementById('order-notes').value.trim(),
-                    measurements: {
-                        chest: Number(document.getElementById('measurement-chest').value),
-                        waist: Number(document.getElementById('measurement-waist').value),
-                        shoulder: Number(document.getElementById('measurement-shoulder').value),
-                        length: Number(document.getElementById('measurement-length').value)
-                    },
-                    inspirationLinks: document.getElementById('order-inspiration').value.trim().split('\n').filter(Boolean),
-                    status: 'Received',
-                    deliveryStatus: 'To be confirmed',
-                    createdAt: serverTimestamp()
-                });
-                orderForm.reset();
-                showOrderMessage('Your order request has been received.');
-                await loadOrders(user);
-            } catch (error) {
-                showOrderMessage('We could not submit your order. Please try again.', true);
-                console.error('Unable to submit order:', error);
-            } finally {
-                submitButton.disabled = false;
-                submitButton.textContent = 'Place Order Request';
-            }
-        });
-
         // Sign In
         signinForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -867,8 +760,7 @@
                 var method = href.indexOf('tel:') === 0 ? 'phone'
                     : href.indexOf('mailto:') === 0 ? 'email'
                     : /^https:\/\/wa\.me\//.test(href) ? 'whatsapp'
-                    : /^https:\/\/www\.instagram\.com\//.test(href) ? 'instagram'
-                    : /^https:\/\/www\.facebook\.com\//.test(href) ? 'facebook' : '';
+                    : /^https:\/\/www\.instagram\.com\//.test(href) ? 'instagram' : '';
                 if (method) gtag('event', 'contact_click', { method: method });
             } catch (error) { /* analytics must never affect the page */ }
         }, true);
