@@ -62,18 +62,28 @@
                 <div><label for="order-occasion" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Occasion</label><input id="order-occasion" required placeholder="Wedding, gala, ceremony" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none"></div>
             <div><label for="order-notes" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Design brief</label><textarea id="order-notes" required rows="4" placeholder="Tell us about the silhouette, fabric, colors, and finish." class="w-full resize-y border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none"></textarea></div>
             <div><label for="order-inspiration" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Inspiration links</label><textarea id="order-inspiration" rows="2" placeholder="One link per line" class="w-full resize-y border border-brand-border bg-brand-bg px-3.5 py-3 text-xs"></textarea></div>
-                <div class="flex gap-3"><button type="button" id="guest-back-btn" class="w-1/3 border border-[#111111] py-3.5 text-[10px] font-medium uppercase tracking-[0.2em] text-[#111111] transition-colors hover:bg-[#111111] hover:text-white">Back</button><button type="button" id="guest-measurements-next-btn" class="hidden flex-1 border border-[#111111] bg-[#111111] py-3.5 text-[10px] font-medium uppercase tracking-[0.2em] text-white transition-colors hover:bg-black/80">Next</button><button type="submit" id="guest-submit-btn" class="flex-1 border border-[#111111] bg-[#111111] py-3.5 text-[10px] font-medium uppercase tracking-[0.2em] text-white transition-colors hover:bg-black/80">Submit Guest Order</button></div>
+                <div>
+                    <label for="order-inspiration-photos" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Inspiration photos <span class="normal-case tracking-normal">(optional, up to 3)</span></label>
+                    <input type="file" id="order-inspiration-photos" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,.heic,.heif" class="block w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs file:mr-3 file:border-0 file:bg-brand-text file:px-3 file:py-1.5 file:text-[10px] file:uppercase file:tracking-[0.15em] file:text-white">
+                    <p class="mt-2 text-[11px] leading-5 text-brand-muted">Show us the look you have in mind. Only our atelier can see your photos.</p>
+                    <div id="inspiration-photo-list" class="mt-3 grid grid-cols-3 gap-3" aria-live="polite"></div>
+                </div>
+                    <div class="flex gap-3"><button type="button" id="guest-back-btn" class="w-1/3 border border-[#111111] py-3.5 text-[10px] font-medium uppercase tracking-[0.2em] text-[#111111] transition-colors hover:bg-[#111111] hover:text-white">Back</button><button type="button" id="guest-measurements-next-btn" class="hidden flex-1 border border-[#111111] bg-[#111111] py-3.5 text-[10px] font-medium uppercase tracking-[0.2em] text-white transition-colors hover:bg-black/80">Next</button><button type="submit" id="guest-submit-btn" class="flex-1 border border-[#111111] bg-[#111111] py-3.5 text-[10px] font-medium uppercase tracking-[0.2em] text-white transition-colors hover:bg-black/80">Submit Guest Order</button></div>
             </div>
             <p id="order-message" class="hidden p-4 text-[11px]" role="status"></p>
         </form>
     </main>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
         import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
-        const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
+        const firebaseConfig = { apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" };
+        const app = initializeApp(firebaseConfig);
+        const photoApp = initializeApp(firebaseConfig, 'GuestPhotoUpload');
         const auth = getAuth(app);
+        const photoAuth = getAuth(photoApp);
         const db = getFirestore(app);
+        const mediaWorkerUrl = 'https://remagstyle-media-worker.1realstranger.workers.dev';
         const form = document.getElementById('guest-order-form');
         const message = document.getElementById('order-message');
         const stepOne = document.getElementById('order-step-1');
@@ -81,12 +91,193 @@
         const gender = document.getElementById('guest-gender');
         const garment = document.getElementById('order-garment');
         const stepTwoFields = stepTwo.querySelectorAll('input, select, textarea');
+        const photoInput = document.getElementById('order-inspiration-photos');
+        const photoList = document.getElementById('inspiration-photo-list');
+        const MAX_PHOTOS = 3;
+        const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+        const PHOTO_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'heic', 'heif'];
+        let photos = [];
+        let photoCounter = 0;
         const measurementGarments = ['Trousers', 'Shirts (Long & Short)', 'Suits', 'Kaftan/Agbada', 'Bridal Couture', 'Red Carpet Dresses', 'Prom Dress', 'Corset Dresses', 'Slit and Kaba'];
         const garmentOptions = {
             Male: ['Trousers', 'Shirts (Long & Short)', 'Suits', 'Kaftan/Agbada'],
             Female: ['Bridal Couture', 'Red Carpet Dresses', 'Prom Dress', 'Corset Dresses', 'Slit and Kaba'],
             Other: ['Custom Bespoke Design', 'Kente Ensemble', 'Evening Wear']
         };
+
+        const photoExtension = (file) => (file.name.split('.').pop() || '').toLowerCase();
+        const photosBusy = () => photos.some((photo) => photo.status === 'preparing' || photo.status === 'uploading');
+        const photosFailed = () => photos.some((photo) => photo.status === 'error');
+        const uploadedPhotos = () => photos.filter((photo) => photo.status === 'done').map((photo) => photo.data);
+
+        function showMessage(text, isError = true) {
+            message.textContent = text;
+            message.className = isError
+                ? 'border border-red-200 bg-red-50 p-4 text-[11px] text-red-700'
+                : 'border border-green-200 bg-green-50 p-4 text-[11px] text-green-800';
+        }
+
+        async function ensurePhotoUser() {
+            await auth.authStateReady();
+            if (auth.currentUser) return auth;
+            await photoAuth.authStateReady();
+            if (!photoAuth.currentUser) await signInAnonymously(photoAuth);
+            return photoAuth;
+        }
+
+        async function mediaPost(path, body) {
+            const uploadAuth = await ensurePhotoUser();
+            if (!uploadAuth.currentUser) throw new Error('We could not prepare a secure photo upload. Please try again.');
+            const token = await uploadAuth.currentUser.getIdToken();
+            const response = await fetch(`${mediaWorkerUrl}${path}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                body: JSON.stringify(body || {})
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok || !data.ok) throw new Error(data.error || 'The photo service did not respond. Please try again.');
+            return data;
+        }
+
+        async function preparePhoto(file) {
+            if (!(file.type.startsWith('image/') || PHOTO_EXTENSIONS.includes(photoExtension(file)))) {
+                throw new Error('Please choose a photo (JPG, PNG, WebP, GIF, AVIF or HEIC).');
+            }
+            if (file.size === 0) throw new Error('This file is empty.');
+            let blob = file;
+            let thumb = null;
+            try {
+                const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+                const draw = (maxSide) => {
+                    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+                    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+                    const context = canvas.getContext('2d');
+                    context.fillStyle = '#ffffff';
+                    context.fillRect(0, 0, canvas.width, canvas.height);
+                    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                    return { canvas, scaled: scale < 1 };
+                };
+                const full = draw(2000);
+                const shrunk = await new Promise((resolve) => full.canvas.toBlob(resolve, 'image/jpeg', 0.85));
+                if (shrunk && (full.scaled || shrunk.size < file.size)) blob = new File([shrunk], 'inspiration.jpg', { type: 'image/jpeg' });
+                try { thumb = draw(160).canvas.toDataURL('image/jpeg', 0.7); } catch { thumb = null; }
+                if (bitmap.close) bitmap.close();
+            } catch {
+                blob = file;
+            }
+            if (blob.size > MAX_PHOTO_BYTES) throw new Error(`This photo is ${Math.round(blob.size / 1048576)} MB. The limit is 10 MB.`);
+            return { blob, thumb };
+        }
+
+        function sendPhoto(signed, blob, onProgress) {
+            return new Promise((resolve, reject) => {
+                const upload = new FormData();
+                for (const [key, value] of Object.entries(signed.fields)) upload.append(key, value);
+                upload.append('file', blob);
+                const request = new XMLHttpRequest();
+                request.open('POST', signed.uploadUrl);
+                request.upload.onprogress = (event) => { if (event.lengthComputable) onProgress(event.loaded / event.total); };
+                request.onerror = () => reject(new Error('The upload was interrupted. Check your connection and try again.'));
+                request.onload = () => {
+                    let data = {};
+                    try { data = JSON.parse(request.responseText); } catch { /* not JSON */ }
+                    if (request.status >= 200 && request.status < 300 && data.public_id) resolve(data);
+                    else reject(new Error('This photo was not accepted. Please try a different one.'));
+                };
+                request.send(upload);
+            });
+        }
+
+        function renderPhotos() {
+            photoList.replaceChildren();
+            for (const photo of photos) {
+                const tile = document.createElement('div');
+                tile.className = 'relative aspect-square overflow-hidden border border-brand-border bg-brand-bg';
+                const shown = photo.previewUrl || photo.thumb;
+                if (shown) {
+                    const picture = document.createElement('img');
+                    picture.src = shown;
+                    picture.alt = '';
+                    picture.className = 'h-full w-full object-cover';
+                    picture.addEventListener('error', () => picture.remove());
+                    tile.append(picture);
+                }
+                const label = document.createElement('span');
+                label.className = 'absolute inset-x-0 bottom-0 bg-black/60 px-1.5 py-1 text-center text-[9px] uppercase tracking-[0.1em] text-white';
+                label.textContent = photo.status === 'done' ? 'Added' : photo.status === 'error' ? photo.error : photo.status === 'preparing' ? 'Preparing...' : `Uploading ${Math.round((photo.progress || 0) * 100)}%`;
+                tile.append(label);
+                if (photo.status !== 'preparing' && photo.status !== 'uploading') {
+                    const remove = document.createElement('button');
+                    remove.type = 'button';
+                    remove.dataset.removePhoto = photo.key;
+                    remove.setAttribute('aria-label', 'Remove this photo');
+                    remove.className = 'absolute right-1 top-1 grid h-6 w-6 place-items-center bg-white/90 text-xs leading-none text-brand-text hover:bg-white';
+                    remove.textContent = '×';
+                    tile.append(remove);
+                }
+                photoList.append(tile);
+            }
+        }
+
+        async function addPhotos(fileList) {
+            const files = Array.from(fileList || []);
+            if (!files.length) return;
+            const room = MAX_PHOTOS - photos.length;
+            if (room <= 0) { showMessage(`You can add up to ${MAX_PHOTOS} photos. Remove one to add another.`); return; }
+            if (files.length > room) showMessage(`Only ${room} more photo${room === 1 ? '' : 's'} can be added, so the first ${room} will be used.`);
+            for (const file of files.slice(0, room)) {
+                const photo = { key: `p${++photoCounter}`, status: 'preparing', progress: 0, name: file.name, previewUrl: null, thumb: null, error: '', data: null };
+                photos.push(photo);
+                renderPhotos();
+                try {
+                    const { blob, thumb } = await preparePhoto(file);
+                    photo.thumb = thumb;
+                    photo.previewUrl = URL.createObjectURL(blob);
+                    photo.status = 'uploading';
+                    renderPhotos();
+                    const signed = await mediaPost('/sign-inspiration', {});
+                    const result = await sendPhoto(signed, blob, (fraction) => { photo.progress = fraction; renderPhotos(); });
+                    if (result.public_id !== signed.publicId || result.resource_type !== 'image') throw new Error('The upload did not match what was expected.');
+                    photo.data = { publicId: signed.publicId, format: String(result.format || 'jpg').toLowerCase(), width: result.width ?? null, height: result.height ?? null, bytes: result.bytes ?? blob.size };
+                    photo.status = 'done';
+                } catch (error) {
+                    photo.status = 'error';
+                    photo.error = String(error.message || 'Failed').slice(0, 60);
+                    console.error('Guest inspiration photo failed:', error);
+                }
+                renderPhotos();
+            }
+        }
+
+        async function removePhoto(key) {
+            const photo = photos.find((entry) => entry.key === key);
+            if (!photo) return;
+            photos = photos.filter((entry) => entry.key !== key);
+            if (photo.previewUrl) URL.revokeObjectURL(photo.previewUrl);
+            renderPhotos();
+            if (photo.data) mediaPost('/delete-inspiration', { publicId: photo.data.publicId }).catch((error) => console.error('Could not remove the uploaded photo:', error));
+        }
+
+        function photoProblem() {
+            if (photosBusy()) return 'Please wait for your photos to finish uploading.';
+            if (photosFailed()) return 'One of your photos did not upload. Please remove it or try again.';
+            return '';
+        }
+
+        function clearPhotos() {
+            photos.forEach((photo) => { if (photo.previewUrl) URL.revokeObjectURL(photo.previewUrl); });
+            photos = [];
+            photoInput.value = '';
+            renderPhotos();
+        }
+
+        photoInput.addEventListener('change', () => { addPhotos(photoInput.files); photoInput.value = ''; });
+        photoList.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-remove-photo]');
+            if (button) removePhoto(button.dataset.removePhoto);
+        });
 
         function updateGarmentOptions() {
             garment.innerHTML = '<option value="">Select a garment</option>';
@@ -121,7 +312,11 @@
 
         document.getElementById('guest-measurements-next-btn').addEventListener('click', async () => {
             if (!garment.reportValidity() || !document.getElementById('order-occasion').reportValidity() || !document.getElementById('order-notes').reportValidity()) return;
+            const waiting = photoProblem();
+            if (waiting) { showMessage(waiting); return; }
             try {
+                await auth.authStateReady();
+                await photoAuth.authStateReady();
                 const userId = auth.currentUser && !auth.currentUser.isAnonymous ? auth.currentUser.uid : null;
                 sessionStorage.setItem('remagstyle-order-draft', JSON.stringify({
                     customerName: document.getElementById('guest-name').value.trim(),
@@ -132,22 +327,26 @@
                     occasion: document.getElementById('order-occasion').value.trim(),
                     designBrief: document.getElementById('order-notes').value.trim(),
                     inspirationLinks: document.getElementById('order-inspiration').value.trim(),
+                    inspirationPhotos: uploadedPhotos(),
+                    photoOwnerUid: photos.length ? (auth.currentUser || photoAuth.currentUser)?.uid || null : null,
                     userId
                 }));
                 window.location.href = 'measurements.html';
             } catch (error) {
-                message.textContent = error.message || 'We could not prepare your order. Please try again.';
-                message.className = 'border border-red-200 bg-red-50 p-4 text-[11px] text-red-700';
+                showMessage(error.message || 'We could not prepare your order. Please try again.');
             }
         });
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             const button = document.getElementById('guest-submit-btn');
+            const waiting = photoProblem();
+            if (waiting) { showMessage(waiting); return; }
             button.disabled = true;
             button.textContent = 'Submitting...';
             const orderNumber = `RS-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
             try {
+                await auth.authStateReady();
                 const userId = auth.currentUser && !auth.currentUser.isAnonymous ? auth.currentUser.uid : null;
                 const order = {
                     orderNumber,
@@ -162,12 +361,14 @@
                     designBrief: document.getElementById('order-notes').value.trim(),
                     measurements: {},
                     inspirationLinks: document.getElementById('order-inspiration').value.trim().split('\n').filter(Boolean),
+                    inspirationPhotos: uploadedPhotos(),
                     status: 'Received',
                     deliveryStatus: 'To be confirmed',
                     createdAt: serverTimestamp()
                 };
                 await addDoc(collection(db, 'orders'), order);
                 form.reset();
+                clearPhotos();
                 updateGarmentOptions();
                 updateMeasurementFlow();
                 stepTwoFields.forEach((field) => { field.disabled = true; });

@@ -71,19 +71,23 @@
         import { getAuth } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
         import { getFirestore, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-        const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
+        const firebaseConfig = { apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" };
+        const app = initializeApp(firebaseConfig);
+        const photoApp = initializeApp(firebaseConfig, 'GuestPhotoUpload');
         const auth = getAuth(app);
+        const photoAuth = getAuth(photoApp);
         const db = getFirestore(app);
         const draft = JSON.parse(sessionStorage.getItem('remagstyle-order-draft') || 'null');
-        // Only photos that this signed-in client uploaded for this order are accepted from the draft.
+        // Accept only photos uploaded by the auth identity that created the order draft.
         const PHOTO_ID_RE = /^remagstyle-inspiration\/([A-Za-z0-9]{1,128})\/[a-f0-9]{32}$/;
         const PHOTO_FORMATS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif', 'heic', 'heif'];
         const plainNumber = (value) => (typeof value === 'number' && Number.isFinite(value) ? value : null);
-        function draftPhotos(userId) {
-            if (!userId || !Array.isArray(draft?.inspirationPhotos)) return [];
+        function draftPhotos(authUid) {
+            const ownerUid = String(draft?.photoOwnerUid || draft?.userId || authUid || '');
+            if (!authUid || ownerUid !== authUid || !Array.isArray(draft?.inspirationPhotos)) return [];
             return draft.inspirationPhotos.flatMap((photo) => {
                 const match = PHOTO_ID_RE.exec(String(photo?.publicId || ''));
-                if (!match || match[1] !== userId) return [];
+                if (!match || match[1] !== authUid) return [];
                 return [{
                     publicId: photo.publicId,
                     format: PHOTO_FORMATS.includes(photo.format) ? photo.format : 'jpg',
@@ -443,7 +447,10 @@
                 collectMeasurements();
                 const orderNumber = `RS-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
                 try {
+                    await auth.authStateReady();
+                    await photoAuth.authStateReady();
                     const userId = auth.currentUser && !auth.currentUser.isAnonymous ? auth.currentUser.uid : null;
+                    const photoOwnerUid = (auth.currentUser || photoAuth.currentUser)?.uid || null;
                     const order = {
                         orderNumber,
                         guestOrder: !userId,
@@ -459,7 +466,7 @@
                         inspirationLinks: Array.isArray(draft.inspirationLinks)
                             ? draft.inspirationLinks
                             : draft.inspirationLinks?.split('\n').filter(Boolean) || [],
-                        inspirationPhotos: draftPhotos(userId),
+                        inspirationPhotos: draftPhotos(photoOwnerUid),
                         status: 'Received',
                         deliveryStatus: 'To be confirmed',
                         createdAt: serverTimestamp()
