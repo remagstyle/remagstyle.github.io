@@ -96,10 +96,10 @@
 </head>
 <body class="site-theme bg-brand-bg text-brand-text flex flex-col min-h-screen selection:bg-brand-text selection:text-white">
 
-    <header id="site-header" class="sticky top-0 z-40 bg-brand-bg border-b border-brand-border/60">
+    <header id="site-header" class="z-40 bg-brand-bg border-b border-brand-border/60">
         <nav class="px-4 md:px-8 lg:px-12 py-3.5 md:py-4 flex items-center justify-between">
             <div class="md:hidden">
-                <button id="mobile-menu-btn" class="p-1.5 text-brand-text focus:outline-none" aria-label="Toggle navigation" aria-expanded="false">
+                <button id="mobile-menu-btn" class="p-1.5 text-brand-text focus:outline-none" aria-label="Toggle navigation" aria-expanded="false" aria-controls="mobile-menu">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>
                 </button>
             </div>
@@ -114,15 +114,22 @@
             </div>
             <a href="appointment.html" class="text-[10px] font-medium tracking-[0.18em] uppercase border border-brand-text px-4 py-2 hover:bg-brand-text hover:text-white transition-colors">Book</a>
         </nav>
-        <div id="mobile-menu" class="hidden md:hidden border-t border-brand-border/40 bg-brand-bg px-5 py-4">
-            <div class="flex flex-col gap-4 text-[11px] font-medium tracking-[0.18em] uppercase">
-                <a href="index.html" class="hover:opacity-50 transition-opacity">Home</a>
-                <a href="gallery.html" aria-current="page" class="underline underline-offset-4">Gallery</a>
-                <a href="track-order.html" class="hover:opacity-50 transition-opacity">Track Order</a>
-                <a href="index.html#footer" class="hover:opacity-50 transition-opacity">Contact</a>
-            </div>
-        </div>
     </header>
+
+    <div id="mobile-menu" class="hidden md:hidden border-t border-brand-border/40 bg-brand-bg px-5 py-4">
+        <div class="flex flex-col gap-4 text-[11px] font-medium tracking-[0.18em] uppercase">
+            <a href="index.html" class="hover:opacity-50 transition-opacity">Home</a>
+            <a href="gallery.html" aria-current="page" class="underline underline-offset-4">Gallery</a>
+            <a href="track-order.html" class="hover:opacity-50 transition-opacity">Track Order</a>
+            <a href="index.html#footer" class="hover:opacity-50 transition-opacity">Contact</a>
+        </div>
+    </div>
+
+    <button id="floating-mobile-menu-btn" class="floating-menu-button floating-menu-button-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-text focus-visible:ring-offset-2" aria-label="Toggle navigation" aria-expanded="false" aria-controls="mobile-menu">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+        </svg>
+    </button>
 
     <main id="main" class="flex-1">
         <section class="text-center max-w-2xl mx-auto px-4 pt-12 sm:pt-16 pb-8 space-y-2">
@@ -400,6 +407,8 @@
             lightbox.classList.add('open');
             document.body.style.overflow = 'hidden';
             $('site-header').setAttribute('inert', '');
+            $('mobile-menu').setAttribute('inert', '');
+            $('floating-mobile-menu-btn').setAttribute('inert', '');
             $('main').setAttribute('inert', '');
             showItem(index);
             $('lb-close').focus();
@@ -410,6 +419,8 @@
             lightbox.classList.remove('open');
             document.body.style.overflow = '';
             $('site-header').removeAttribute('inert');
+            $('mobile-menu').removeAttribute('inert');
+            $('floating-mobile-menu-btn').removeAttribute('inert');
             $('main').removeAttribute('inert');
             current = -1;
             if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
@@ -439,10 +450,32 @@
         document.querySelectorAll('#filters .chip').forEach((chip) => chip.addEventListener('click', () => { if (chip.disabled) return; activeKind = chip.dataset.filter; applyFilters(); }));
         $('year').textContent = new Date().getFullYear();
         const menuButton = $('mobile-menu-btn');
-        menuButton.addEventListener('click', () => {
-            const open = $('mobile-menu').classList.toggle('hidden') === false;
+        const floatingMenuButton = $('floating-mobile-menu-btn');
+        const mobileMenu = $('mobile-menu');
+        const mobileNav = document.querySelector('header nav');
+
+        function updateMobileNavigation() {
+            const mobileNavHidden = mobileNav.getBoundingClientRect().bottom <= 0;
+            floatingMenuButton.classList.toggle('is-visible', mobileNavHidden);
+            mobileMenu.classList.toggle('mobile-menu-floating', mobileNavHidden);
+        }
+
+        function toggleMobileMenu() {
+            const open = mobileMenu.classList.toggle('hidden') === false;
             menuButton.setAttribute('aria-expanded', String(open));
-        });
+            floatingMenuButton.setAttribute('aria-expanded', String(open));
+        }
+
+        menuButton.addEventListener('click', toggleMobileMenu);
+        floatingMenuButton.addEventListener('click', toggleMobileMenu);
+        mobileMenu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+            menuButton.setAttribute('aria-expanded', 'false');
+            floatingMenuButton.setAttribute('aria-expanded', 'false');
+        }));
+        window.addEventListener('scroll', updateMobileNavigation, { passive: true });
+        window.addEventListener('resize', updateMobileNavigation);
+        updateMobileNavigation();
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);

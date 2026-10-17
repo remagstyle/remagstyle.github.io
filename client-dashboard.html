@@ -81,13 +81,20 @@
                 </svg>
             </button>
         </nav>
-        <div id="mobile-menu" class="hidden border-t border-brand-border/40 bg-brand-bg px-5 py-4 lg:hidden">
-            <div class="flex flex-col gap-4 text-[10px] font-medium uppercase tracking-[0.18em]">
-                <a href="index.html" class="mobile-menu-link transition-opacity hover:opacity-50">Back to site</a>
-                <button type="button" class="signout-btn w-fit border border-brand-text px-4 py-2 transition-colors hover:bg-brand-text hover:text-white">Sign Out</button>
-            </div>
-        </div>
     </header>
+
+    <div id="mobile-menu" class="hidden border-t border-brand-border/40 bg-brand-bg px-5 py-4 lg:hidden">
+        <div class="flex flex-col gap-4 text-[10px] font-medium uppercase tracking-[0.18em]">
+            <a href="index.html" class="mobile-menu-link transition-opacity hover:opacity-50">Back to site</a>
+            <button type="button" class="signout-btn w-fit border border-brand-text px-4 py-2 transition-colors hover:bg-brand-text hover:text-white">Sign Out</button>
+        </div>
+    </div>
+
+    <button id="floating-mobile-menu-btn" type="button" class="floating-menu-button floating-menu-button-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-text focus-visible:ring-offset-2" aria-label="Toggle navigation" aria-expanded="false" aria-controls="mobile-menu">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+        </svg>
+    </button>
 
     <main class="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-12">
         <section class="relative mb-10 overflow-hidden rounded-xl bg-[#D6D2CA] px-6 py-10 shadow-[0_36px_84px_rgba(0,0,0,0.58)] sm:px-10 sm:py-16 lg:px-12 lg:py-20">
@@ -681,16 +688,33 @@
         }));
 
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const floatingMobileMenuBtn = document.getElementById('floating-mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
         const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
-        mobileMenuBtn.addEventListener('click', () => {
+
+        const mobileNav = document.querySelector('header nav');
+        function updateMobileNavigation() {
+            const mobileNavHidden = mobileNav.getBoundingClientRect().bottom <= 0;
+            floatingMobileMenuBtn.classList.toggle('is-visible', mobileNavHidden);
+            mobileMenu.classList.toggle('mobile-menu-floating', mobileNavHidden);
+        }
+
+        function toggleMobileMenu() {
             const isOpen = !mobileMenu.classList.toggle('hidden');
             mobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
-        });
+            floatingMobileMenuBtn.setAttribute('aria-expanded', String(isOpen));
+        }
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+        floatingMobileMenuBtn.addEventListener('click', toggleMobileMenu);
         mobileMenuLinks.forEach((link) => link.addEventListener('click', () => {
             mobileMenu.classList.add('hidden');
             mobileMenuBtn.setAttribute('aria-expanded', 'false');
+            floatingMobileMenuBtn.setAttribute('aria-expanded', 'false');
         }));
+        window.addEventListener('scroll', updateMobileNavigation, { passive: true });
+        window.addEventListener('resize', updateMobileNavigation);
+        updateMobileNavigation();
 
         window.addEventListener('pageshow', (event) => {
             if (event.persisted && auth.currentUser) loadOrders(auth.currentUser);

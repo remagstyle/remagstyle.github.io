@@ -215,7 +215,7 @@
 <body class="site-theme bg-brand-bg text-brand-text flex flex-col min-h-screen selection:bg-brand-text selection:text-white">
 
     <!-- Header & Navigation -->
-    <header class="sticky top-0 z-40 bg-brand-bg border-b border-brand-border/60">
+    <header class="z-40 bg-brand-bg border-b border-brand-border/60">
         <div class="bg-brand-text text-white text-[10px] md:text-[11px] uppercase tracking-widest py-2 px-4 flex justify-between items-center text-center">
             <div class="hidden lg:block w-1/4"></div>
             <p class="flex-1 font-light tracking-[0.15em] text-gray-200 truncate">
@@ -229,7 +229,7 @@
 
         <nav class="bg-brand-bg/95 backdrop-blur-md border-b border-brand-border/40 px-4 md:px-8 lg:px-12 py-3.5 md:py-4 flex items-center justify-between">
             <div class="flex items-center space-x-3 md:hidden">
-                <button id="mobile-menu-btn" class="p-1.5 text-brand-text focus:outline-none" aria-label="Toggle Navigation">
+                <button id="mobile-menu-btn" class="p-1.5 text-brand-text focus:outline-none" aria-label="Toggle navigation" aria-expanded="false" aria-controls="mobile-menu">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
                     </svg>
@@ -255,15 +255,21 @@
                 </button>
             </div>
         </nav>
-
-        <div id="mobile-menu" class="hidden md:hidden border-b border-brand-border/40 bg-brand-bg px-5 py-4">
-            <div class="flex flex-col gap-4 text-[11px] font-medium tracking-[0.18em] uppercase">
-                <a href="gallery.html" class="mobile-menu-link hover:opacity-50 transition-opacity">Gallery</a>
-                <a href="track-order.html" class="mobile-menu-link hover:opacity-50 transition-opacity">Track Order</a>
-                <a href="#footer" class="mobile-menu-link hover:opacity-50 transition-opacity">Contact</a>
-            </div>
-        </div>
     </header>
+
+    <div id="mobile-menu" class="hidden md:hidden border-b border-brand-border/40 bg-brand-bg px-5 py-4">
+        <div class="flex flex-col gap-4 text-[11px] font-medium tracking-[0.18em] uppercase">
+            <a href="gallery.html" class="mobile-menu-link hover:opacity-50 transition-opacity">Gallery</a>
+            <a href="track-order.html" class="mobile-menu-link hover:opacity-50 transition-opacity">Track Order</a>
+            <a href="#footer" class="mobile-menu-link hover:opacity-50 transition-opacity">Contact</a>
+        </div>
+    </div>
+
+    <button id="floating-mobile-menu-btn" class="floating-menu-button floating-menu-button-md focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-text focus-visible:ring-offset-2" aria-label="Toggle navigation" aria-expanded="false" aria-controls="mobile-menu">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/>
+        </svg>
+    </button>
 
     <main class="flex-1">
         <!-- Hero Section -->
@@ -523,8 +529,16 @@
 
         // UI Elements
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const floatingMobileMenuBtn = document.getElementById('floating-mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
         const mobileMenuLinks = document.querySelectorAll('.mobile-menu-link');
+        const mobileNav = document.querySelector('header nav');
+        function updateMobileNavigation() {
+            const mobileNavHidden = mobileNav.getBoundingClientRect().bottom <= 0;
+            floatingMobileMenuBtn.classList.toggle('is-visible', mobileNavHidden);
+            mobileMenu.classList.toggle('mobile-menu-floating', mobileNavHidden);
+        }
+
         const accountDrawer = document.getElementById('account-drawer');
         const accountOverlay = document.getElementById('account-overlay');
         const accountPanel = document.getElementById('account-panel');
@@ -625,14 +639,25 @@
             const isOpen = !mobileMenu.classList.contains('hidden');
             mobileMenu.classList.toggle('hidden', isOpen);
             mobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
+            floatingMobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
+        });
+        floatingMobileMenuBtn.addEventListener('click', () => {
+            const isOpen = !mobileMenu.classList.contains('hidden');
+            mobileMenu.classList.toggle('hidden', isOpen);
+            mobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
+            floatingMobileMenuBtn.setAttribute('aria-expanded', String(!isOpen));
         });
 
         mobileMenuLinks.forEach((link) => {
             link.addEventListener('click', () => {
                 mobileMenu.classList.add('hidden');
                 mobileMenuBtn.setAttribute('aria-expanded', 'false');
+                floatingMobileMenuBtn.setAttribute('aria-expanded', 'false');
             });
         });
+        window.addEventListener('scroll', updateMobileNavigation, { passive: true });
+        window.addEventListener('resize', updateMobileNavigation);
+        updateMobileNavigation();
 
         // Drawer Controls
         async function openAccount() {

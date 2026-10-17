@@ -11,6 +11,47 @@ body.site-theme header {
     backdrop-filter: blur(14px);
 }
 
+.floating-menu-button {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 50;
+    display: none;
+    width: 3rem;
+    height: 3rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: #111111;
+    color: #ffffff;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-menu-floating {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 5rem;
+    z-index: 50;
+    width: 16rem;
+    max-width: calc(100vw - 2.5rem);
+    max-height: calc(100vh - 7rem);
+    overflow-y: auto;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 767px) {
+    .floating-menu-button-md.is-visible {
+        display: flex;
+    }
+}
+
+@media (max-width: 1023px) {
+    .floating-menu-button-lg.is-visible {
+        display: flex;
+    }
+}
+
 @media print {
     body.site-theme {
         background: #ffffff !important;
