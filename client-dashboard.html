@@ -63,6 +63,7 @@
         }
     </style>
     <link rel="stylesheet" href="site-theme.css">
+    <script src="terms-consent.js" defer></script>
 </head>
 <body class="site-theme min-h-screen bg-brand-bg text-brand-text">
     <header class="border-b border-brand-border/60 bg-brand-bg/95 backdrop-blur-md">
@@ -127,7 +128,7 @@
                     <h2 class="mt-1 font-serif text-3xl font-light">Create an order</h2>
                 </div>
 
-                <form id="order-form" class="space-y-5 border border-brand-border bg-white p-5 sm:p-7">
+                <form id="order-form" data-requires-terms class="space-y-5 border border-brand-border bg-white p-5 sm:p-7">
                     <div id="order-step-1" class="space-y-5">
                         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
