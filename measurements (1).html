@@ -471,7 +471,8 @@
                         inspirationPhotos: draftPhotos(photoOwnerUid),
                         status: 'Received',
                         deliveryStatus: 'To be confirmed',
-                        createdAt: serverTimestamp()
+                        createdAt: serverTimestamp(),
+                        termsAcceptance: (window.RemagTerms && window.RemagTerms.getAcceptance()) || null
                     };
                     await addDoc(collection(db, 'orders'), order);
                     sessionStorage.removeItem('remagstyle-order-draft');

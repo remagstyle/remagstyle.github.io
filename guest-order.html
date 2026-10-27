@@ -366,7 +366,8 @@
                     inspirationPhotos: uploadedPhotos(),
                     status: 'Received',
                     deliveryStatus: 'To be confirmed',
-                    createdAt: serverTimestamp()
+                    createdAt: serverTimestamp(),
+                    termsAcceptance: (window.RemagTerms && window.RemagTerms.getAcceptance()) || null
                 };
                 await addDoc(collection(db, 'orders'), order);
                 form.reset();
