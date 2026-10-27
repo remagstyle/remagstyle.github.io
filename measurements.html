@@ -27,6 +27,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>body { font-family: 'Inter', sans-serif; } .font-serif { font-family: 'Cormorant Garamond', serif; }</style>
     <link rel="stylesheet" href="site-theme.css">
+    <script src="terms-consent.js" defer></script>
 </head>
 <body class="site-theme min-h-screen bg-brand-bg text-brand-text">
     <header class="border-b border-brand-border/60 bg-brand-bg/95">
@@ -40,7 +41,7 @@
         <h1 class="mt-2 font-serif text-4xl font-light sm:text-5xl">Your measurements</h1>
         <p id="measurement-intro" class="mt-3 text-xs leading-6 text-brand-muted">Loading your selected garment...</p>
         <section class="mt-8 border border-brand-border bg-white p-5 sm:p-8">
-            <form id="measurements-form" class="space-y-5">
+            <form id="measurements-form" data-requires-terms class="space-y-5">
                 <h2 id="measurement-stage-title" class="font-serif text-2xl font-light">Measurements</h2>
                 <button type="button" id="size-chart-btn" class="hidden items-center gap-2 border border-brand-border px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-brand-text transition-colors hover:bg-brand-text hover:text-white" aria-haspopup="dialog" aria-controls="size-chart-modal">
                     <span aria-hidden="true" class="flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px] leading-none">?</span>
@@ -470,7 +471,8 @@
                         inspirationPhotos: draftPhotos(photoOwnerUid),
                         status: 'Received',
                         deliveryStatus: 'To be confirmed',
-                        createdAt: serverTimestamp()
+                        createdAt: serverTimestamp(),
+                        termsAcceptance: (window.RemagTerms && window.RemagTerms.getAcceptance()) || null
                     };
                     await addDoc(collection(db, 'orders'), order);
                     sessionStorage.removeItem('remagstyle-order-draft');
