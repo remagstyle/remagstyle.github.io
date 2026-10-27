@@ -37,12 +37,16 @@
     "#rt-ok:disabled{opacity:.35;cursor:not-allowed}"
   ].join("");
 
+  var lastRecord = null; // kept in memory too, in case the browser blocks localStorage
+
   function getAcceptance() {
+    if (lastRecord) return lastRecord;
     try { return JSON.parse(localStorage.getItem(CONFIG.storageKey)); } catch (e) { return null; }
   }
 
   function save() {
     var rec = { version: CONFIG.version, acceptedAt: new Date().toISOString() };
+    lastRecord = rec;
     try { localStorage.setItem(CONFIG.storageKey, JSON.stringify(rec)); } catch (e) {}
     return rec;
   }
