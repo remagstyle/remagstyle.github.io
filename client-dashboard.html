@@ -193,15 +193,37 @@
                     <p class="border border-dashed border-brand-border p-5 text-xs text-brand-muted">Your order history will appear here.</p>
                 </div>
             </section>
+            <section class="border-t border-brand-border pt-8">
+                <p class="text-[10px] font-medium uppercase tracking-[0.25em] text-brand-muted">Account</p>
+                <h2 class="mt-1 font-serif text-3xl font-light">Privacy &amp; account</h2>
+                <p class="mt-3 max-w-xl text-xs leading-6 text-brand-muted">You can permanently delete your login at any time. See our <a href="privacy.html" class="underline">Privacy Policy</a> and <a href="terms.html" class="underline">Terms</a>.</p>
+                <button type="button" id="delete-account-open" class="mt-4 border border-red-300 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-red-700 transition-colors hover:bg-red-700 hover:text-white">Delete my account</button>
+            </section>
         </div>
     </main>
+
+    <div id="delete-account-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-account-title">
+        <form id="delete-account-form" class="w-full max-w-md space-y-4 border border-brand-border bg-white p-6">
+            <h2 id="delete-account-title" class="font-serif text-2xl font-light">Delete your account?</h2>
+            <p class="text-xs leading-6 text-brand-muted">This permanently deletes your login and your saved profile. You will not be able to sign in again or see your order history here. For orders already placed, we keep the order and payment records we need to finish your garment and meet our legal and accounting duties. To have those removed too, email us after deleting your account.</p>
+            <div>
+                <label for="delete-account-password" class="mb-1 block text-[10px] uppercase tracking-[0.2em] text-brand-muted">Confirm your password</label>
+                <input type="password" id="delete-account-password" required autocomplete="current-password" class="w-full border border-brand-border bg-brand-bg px-3.5 py-3 text-xs focus:border-brand-text focus:outline-none">
+            </div>
+            <p id="delete-account-message" class="hidden border border-red-200 bg-red-50 p-3 text-[11px] text-red-700" role="alert"></p>
+            <div class="flex gap-3">
+                <button type="button" id="delete-account-cancel" class="w-1/3 border border-brand-text py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-brand-text transition-colors hover:bg-brand-text hover:text-white">Cancel</button>
+                <button type="submit" id="delete-account-confirm" class="flex-1 bg-red-700 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-white transition-colors hover:bg-red-800">Delete permanently</button>
+            </div>
+        </form>
+    </div>
 
     <div id="dashboard-toast" class="hidden fixed right-5 top-5 z-50 max-w-xs border border-green-200 bg-green-50 px-4 py-3 text-[11px] text-green-800 shadow-lg" role="status" aria-live="polite"></div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-        import { getFirestore, addDoc, updateDoc, doc, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged, signOut, EmailAuthProvider, reauthenticateWithCredential, deleteUser } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+        import { getFirestore, addDoc, updateDoc, deleteDoc, doc, collection, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
         import { startInactivityLogout } from "./auth-inactivity.js";
 
         const firebaseConfig = {
@@ -696,6 +718,52 @@
             await signOut(auth);
             window.location.href = 'index.html';
         }));
+
+        // ---------- Delete account (required by Google Play and the App Store) ----------
+        const deleteModal = document.getElementById('delete-account-modal');
+        const deleteForm = document.getElementById('delete-account-form');
+        const deletePassword = document.getElementById('delete-account-password');
+        const deleteMessage = document.getElementById('delete-account-message');
+        const deleteConfirm = document.getElementById('delete-account-confirm');
+        const setDeleteModal = (open) => {
+            deleteModal.classList.toggle('hidden', !open);
+            deleteModal.classList.toggle('flex', open);
+            deleteMessage.classList.add('hidden');
+            deletePassword.value = '';
+            if (open) deletePassword.focus();
+        };
+        document.getElementById('delete-account-open').addEventListener('click', () => setDeleteModal(true));
+        document.getElementById('delete-account-cancel').addEventListener('click', () => setDeleteModal(false));
+        deleteModal.addEventListener('click', (event) => { if (event.target === deleteModal) setDeleteModal(false); });
+        deleteForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const user = auth.currentUser;
+            if (!user || !user.email) return;
+            deleteConfirm.disabled = true;
+            deleteConfirm.textContent = 'Deleting...';
+            deleteMessage.classList.add('hidden');
+            try {
+                // Firebase only allows deleting a login that signed in recently, so confirm the password first.
+                await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, deletePassword.value));
+                try { await deleteDoc(doc(db, 'users', user.uid)); } catch (error) { console.error('Could not remove profile record:', error); }
+                stopInactivityLogout?.();
+                await deleteUser(user);
+                try { sessionStorage.clear(); } catch { /* nothing to clear */ }
+                window.location.href = 'index.html';
+            } catch (error) {
+                const wrong = ['auth/wrong-password', 'auth/invalid-credential', 'auth/invalid-login-credentials'].includes(error.code);
+                deleteMessage.textContent = wrong
+                    ? 'That password is not correct.'
+                    : error.code === 'auth/too-many-requests'
+                        ? 'Too many attempts. Please wait a few minutes and try again.'
+                        : 'We could not delete your account. Please try again or contact us.';
+                deleteMessage.classList.remove('hidden');
+                console.error('Unable to delete account:', error);
+            } finally {
+                deleteConfirm.disabled = false;
+                deleteConfirm.textContent = 'Delete permanently';
+            }
+        });
 
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const floatingMobileMenuBtn = document.getElementById('floating-mobile-menu-btn');
