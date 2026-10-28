@@ -729,6 +729,12 @@
             if (event.key === 'Escape' && !accountDrawer.hasAttribute('inert')) closeAccount();
         });
 
+        // The bottom bar's Account and Order tabs on other pages link here (index.html#account / #order).
+        if (location.hash === '#account' || location.hash === '#order') {
+            history.replaceState(null, '', location.pathname + location.search);
+            openAccount();
+        }
+
         // Tabs
         const setActiveAuthTab = (activeButton, inactiveButton) => {
             activeButton.setAttribute('aria-selected', 'true');
@@ -797,6 +803,7 @@
 
         // Auth Listener
         onAuthStateChanged(auth, (user) => {
+            try { localStorage.setItem('remag_signed_in', user && !user.isAnonymous ? '1' : '0'); } catch (e) { /* the bottom bar then uses its safe default */ }
             stopInactivityLogout?.();
             if (user) {
                 const name = user.displayName || user.email?.split('@')[0] || 'Client';

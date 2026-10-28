@@ -106,7 +106,7 @@
         </svg>
     </button>
 
-    <main class="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-12">
+    <main id="top" class="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-12">
         <section class="relative mb-10 overflow-hidden rounded-xl bg-[#D6D2CA] px-6 py-10 shadow-[0_36px_84px_rgba(0,0,0,0.58)] sm:px-10 sm:py-16 lg:px-12 lg:py-20">
             <div class="absolute inset-0">
                 <img src="image/hero%203.jpg" alt="REMAGSTYLE Luxury Collection" fetchpriority="high" decoding="async" class="h-full w-full object-cover object-center brightness-[0.97]">
@@ -198,7 +198,10 @@
                 <p class="text-[10px] font-medium uppercase tracking-[0.25em] text-brand-muted">Account</p>
                 <h2 class="mt-1 font-serif text-3xl font-light">Privacy &amp; account</h2>
                 <p class="mt-3 max-w-xl text-xs leading-6 text-brand-muted">You can permanently delete your login at any time. See our <a href="privacy.html" class="underline">Privacy Policy</a> and <a href="terms.html" class="underline">Terms</a>.</p>
-                <button type="button" id="delete-account-open" class="mt-4 border border-red-300 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-red-700 transition-colors hover:bg-red-700 hover:text-white">Delete my account</button>
+                <div class="mt-4 flex flex-wrap gap-3">
+                    <button type="button" class="signout-btn border border-brand-text px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-brand-text transition-colors hover:bg-brand-text hover:text-white">Sign out</button>
+                    <button type="button" id="delete-account-open" class="border border-red-300 px-4 py-2.5 text-[10px] font-medium uppercase tracking-[0.18em] text-red-700 transition-colors hover:bg-red-700 hover:text-white">Delete my account</button>
+                </div>
             </section>
         </div>
     </main>
@@ -800,6 +803,7 @@
         });
 
         onAuthStateChanged(auth, (user) => {
+            try { localStorage.setItem('remag_signed_in', user && !user.isAnonymous ? '1' : '0'); } catch (e) { /* the bottom bar then uses its safe default */ }
             stopInactivityLogout?.();
             if (!user || user.isAnonymous) {
                 window.location.href = 'index.html';
