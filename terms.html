@@ -17,6 +17,12 @@
   a{color:#111}
   .meta{color:#666;font-size:12px}
 </style>
+    <!-- Metricool website tracker. Public pages only: the order tracking, dashboard and document pages
+         carry private order numbers and tokens in their addresses, so they must not load it. -->
+    <script>
+        function loadScript(a){var b=document.getElementsByTagName("head")[0],c=document.createElement("script");c.type="text/javascript",c.src="https://tracker.metricool.com/resources/be.js",c.onreadystatechange=a,c.onload=a,b.appendChild(c)}
+        loadScript(function(){beTracker.t({hash:"d84d52199bf30a35cca0233e6cb5857c"})});
+    </script>
 </head>
 <body>
 <main>

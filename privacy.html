@@ -17,6 +17,12 @@
   a{color:#111}
   .meta{color:#666;font-size:12px}
 </style>
+    <!-- Metricool website tracker. Public pages only: the order tracking, dashboard and document pages
+         carry private order numbers and tokens in their addresses, so they must not load it. -->
+    <script>
+        function loadScript(a){var b=document.getElementsByTagName("head")[0],c=document.createElement("script");c.type="text/javascript",c.src="https://tracker.metricool.com/resources/be.js",c.onreadystatechange=a,c.onload=a,b.appendChild(c)}
+        loadScript(function(){beTracker.t({hash:"d84d52199bf30a35cca0233e6cb5857c"})});
+    </script>
 </head>
 <body>
 <main>
@@ -38,7 +44,7 @@
 <h3>Payment information</h3>
 <p>Payments are processed by Paystack. Your card or mobile money details are entered on Paystack's page and are never seen or stored by us. We keep the payment reference, amount, currency, status and time so we can match payments to orders.</p>
 <h3>Technical information</h3>
-<p>We use Google Analytics to count visits. We send only the page path, never the full address, so order numbers and other private details in a link are not shared with analytics. Our servers also see your IP address when you make a request, which we use to limit abuse such as repeated lookups or uploads. Your browser stores small items on your device, for example to remember an unfinished order or that you accepted our terms.</p>
+<p>We use Google Analytics to count visits. We send only the page path, never the full address, so order numbers and other private details in a link are not shared with analytics. On our public pages (home, gallery, appointments, terms and privacy) we also use Metricool's website tracker to understand how visitors find us and which pages they view. We do not use it on our order, order tracking, account or document pages. Our servers also see your IP address when you make a request, which we use to limit abuse such as repeated lookups or uploads. Your browser stores small items on your device, for example to remember an unfinished order or that you accepted our terms.</p>
 
 <h2>2a. Photos and measurements</h2>
 <p>Inspiration photos are stored privately and can be opened only by our atelier team. They have no public web address. Measurements are used only to make your garment.</p>
@@ -60,7 +66,7 @@
 <li><b>Cloudflare</b> (the servers that handle payments, order lookups and uploads)</li>
 <li><b>Cloudinary</b> (storage of gallery images and your private inspiration photos)</li>
 <li><b>Paystack</b> (payments)</li>
-<li><b>Google Analytics</b> (visit statistics)</li>
+<li><b>Google Analytics</b> and <b>Metricool</b> (visit statistics and marketing reports)</li>
 </ul>
 <p>These providers may process information in countries outside Ghana. We may also disclose information if the law requires it.</p>
 
