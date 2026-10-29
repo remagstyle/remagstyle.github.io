@@ -40,6 +40,9 @@
     "@media (max-width:1023.98px){",
     // The hamburger menus are replaced by this bar. The top bar with the logo stays.
     "#mobile-menu,#mobile-menu-btn,.floating-menu-button,.mobile-menu-floating{display:none !important}",
+    // The account button moved into this bar, so the top bar keeps only the centred logo.
+    "#open-account-btn{display:none !important}",
+    "header nav:has(#open-account-btn){justify-content:center !important}",
     "body{padding-top:var(--safe-area-inset-top,env(safe-area-inset-top,0px))}",
     "body{padding-bottom:calc(108px + " + INSET + ") !important}",
     "body.rg-has-footer{padding-bottom:0 !important}",
