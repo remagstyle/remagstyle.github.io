@@ -13,7 +13,6 @@
   var ICONS = {
     home: '<path d="m3.5 10.5 8.5-7 8.5 7"/><path d="M5.5 9.5v10.5h13V9.5M9.5 20v-6h5v6"/>',
     gallery: '<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="m20.5 16-4.5-4.5L7 19.5"/>',
-    order: '<path d="M6 8.5h12l-1 11.5H7L6 8.5Z"/><path d="M9 8.5V7a3 3 0 0 1 6 0v1.5"/>',
     track: '<path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/>',
     book: '<rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M8 3.5v4M16 3.5v4M4 10.5h16"/>',
     account: '<circle cx="12" cy="8.2" r="3.7"/><path d="M4.8 20.2a7.2 7.2 0 0 1 14.4 0"/>'
@@ -29,12 +28,6 @@
   var ITEMS = [
     { label: 'Home', short: 'Home', href: 'index.html', icon: 'home', match: ['', 'index.html'] },
     { label: 'Gallery', short: 'Gallery', href: 'gallery.html', icon: 'gallery', match: ['gallery.html'] },
-    { label: 'Order', short: 'Order', href: 'index.html#order', icon: 'order', id: 'order',
-      match: ['guest-order.html', 'measurements.html'],
-      dest: function () {
-        var f = signedInFlag();
-        return f === '1' ? 'client-dashboard.html#order-form' : f === '0' ? 'guest-order.html' : 'index.html#order';
-      } },
     { label: 'Track order', short: 'Track', href: 'track-order.html', icon: 'track', match: ['track-order.html'] },
     { label: 'Book appointment', short: 'Book', href: 'appointment.html', icon: 'book', match: ['appointment.html'] },
     { label: 'Account', short: 'Account', href: 'index.html#account', icon: 'account', id: 'account',
@@ -98,14 +91,12 @@
     }).join('');
     document.body.appendChild(nav);
 
-    // Mark the tab for the page we are on. On the dashboard, #order-form means the Order tab.
+    // Mark the tab for the page we are on.
     function markActive() {
       var page = currentPage();
-      var onOrderForm = page === 'client-dashboard.html' && location.hash === '#order-form';
       Array.prototype.forEach.call(nav.querySelectorAll('a'), function (a) {
         var item = ITEMS[+a.getAttribute('data-i')];
         var active = item.match.indexOf(page) !== -1;
-        if (page === 'client-dashboard.html') active = onOrderForm ? item.id === 'order' : item.id === 'account';
         if (active) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
       });
     }
