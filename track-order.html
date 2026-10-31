@@ -36,7 +36,7 @@
         const app = initializeApp({ apiKey: "AIzaSyCzcxTLAUH83sQsia4dPg5py19YzRsmw0o", authDomain: "remagstyle-43b41.firebaseapp.com", projectId: "remagstyle-43b41", messagingSenderId: "145831201308", appId: "1:145831201308:web:489a014516356f73a72dd9" });
         const auth = getAuth(app); const db = getFirestore(app); const form = document.getElementById('track-form'); const input = document.getElementById('order-number'); const result = document.getElementById('track-result');
         let liveOrderUnsubscribe = null;
-        const paymentWorkerUrl = 'https://remagstyle-paystack-worker.1realstranger.workers.dev';
+        const paymentWorkerUrl = 'https://api.remag.style';
         function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' })[character]); }
         const PAID_WORDS = ['paid', 'success', 'successful', 'confirmed'];
         let guestEmail = '';
