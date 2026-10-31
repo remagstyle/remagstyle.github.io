@@ -20,28 +20,6 @@
     <title>Client Dashboard | REMAGSTYLE</title>
     <meta name="robots" content="noindex, follow">
     <link rel="icon" type="image/png" href="image/Logo.png">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            bg: '#F9F8F6',
-                            card: '#EFECE6',
-                            text: '#111111',
-                            muted: '#666666',
-                            border: '#E2DFD8'
-                        }
-                    },
-                    fontFamily: {
-                        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -65,12 +43,13 @@
     <link rel="stylesheet" href="site-theme.css">
     <script src="terms-consent.js" defer></script>
     <script src="bottom-nav.js" defer></script>
+    <link rel="stylesheet" href="css/client-dashboard.css">
 </head>
 <body class="site-theme min-h-screen bg-brand-bg text-brand-text">
     <header class="border-b border-brand-border/60 bg-brand-bg/95 backdrop-blur-md">
         <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8 lg:px-12">
             <a href="index.html" aria-label="REMAGSTYLE home" class="flex items-center gap-3">
-                <img src="image/Logo.png" alt="REMAGSTYLE" decoding="async" class="h-14 w-14 object-contain">
+                <img src="image/Logo.png" width="512" height="512" alt="REMAGSTYLE" decoding="async" class="h-14 w-14 object-contain">
                 <span class="hidden text-[10px] font-medium uppercase tracking-[0.2em] sm:inline">Client Dashboard</span>
             </a>
             <div class="hidden items-center gap-4 lg:flex">
@@ -109,7 +88,7 @@
     <main id="top" class="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-12">
         <section class="relative mb-10 overflow-hidden rounded-xl bg-[#D6D2CA] px-6 py-10 shadow-[0_36px_84px_rgba(0,0,0,0.58)] sm:px-10 sm:py-16 lg:px-12 lg:py-20">
             <div class="absolute inset-0">
-                <img src="image/hero%203.jpg" alt="REMAGSTYLE Luxury Collection" fetchpriority="high" decoding="async" class="h-full w-full object-cover object-center brightness-[0.97]">
+                <img src="image/hero%203.jpg" width="1170" height="1462" alt="REMAGSTYLE Luxury Collection" fetchpriority="high" decoding="async" class="h-full w-full object-cover object-center brightness-[0.97]">
                 <div class="absolute inset-0 bg-gradient-to-r from-black/55 via-black/30 to-black/10"></div>
             </div>
             <div class="relative z-10 sm:flex sm:items-end sm:justify-between sm:gap-8">

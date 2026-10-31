@@ -86,29 +86,6 @@
         ]
     }
     </script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            bg: '#F9F8F6',
-                            card: '#EFECE6',
-                            text: '#111111',
-                            muted: '#666666',
-                            border: '#E2DFD8',
-                            darkBg: '#1A1A1A'
-                        }
-                    },
-                    fontFamily: {
-                        serif: ['Cormorant Garamond', 'Playfair Display', 'Georgia', 'serif'],
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -225,6 +202,7 @@
         function loadScript(a){var b=document.getElementsByTagName("head")[0],c=document.createElement("script");c.type="text/javascript",c.src="https://tracker.metricool.com/resources/be.js",c.onreadystatechange=a,c.onload=a,b.appendChild(c)}
         loadScript(function(){beTracker.t({hash:"d84d52199bf30a35cca0233e6cb5857c"})});
     </script>
+    <link rel="stylesheet" href="css/index.css">
 </head>
 <body class="site-theme bg-brand-bg text-brand-text flex flex-col min-h-screen selection:bg-brand-text selection:text-white">
 
@@ -251,7 +229,7 @@
             </div>
 
             <a href="#" aria-label="REMAGSTYLE home" class="relative h-12 w-12 sm:h-14 sm:w-14 shrink-0">
-                <img src="image/Logo.png" alt="REMAGSTYLE" width="1024" height="1024" fetchpriority="high" decoding="async" class="absolute left-1/2 top-1/2 z-10 h-32 w-32 -translate-x-1/2 -translate-y-1/2 scale-[1.69] object-contain sm:h-36 sm:w-36" />
+                <img src="image/Logo.png" alt="REMAGSTYLE" width="512" height="512" fetchpriority="high" decoding="async" class="absolute left-1/2 top-1/2 z-10 h-32 w-32 -translate-x-1/2 -translate-y-1/2 scale-[1.69] object-contain sm:h-36 sm:w-36" />
             </a>
 
             <div class="hidden md:flex items-center space-x-6 lg:space-x-8 text-[11px] lg:text-[12px] font-medium tracking-[0.18em] uppercase text-brand-text">
@@ -304,8 +282,8 @@
                             src="image/hero.jpg"
                             fetchpriority="high"
                             decoding="async"
-                    alt="Model wearing a white embellished dress beside a matching bridal gown on a mannequin"
-                    width="853" height="845"
+                    alt="Woman in a champagne tulle gown with a gold sequined corset bodice, holding a dried-flower bouquet in front of a pink tufted sofa"
+                    width="1376" height="768"
                     class="w-full h-full object-cover object-top"
                 />
                 <div class="absolute inset-0 bg-gradient-to-r from-black/65 via-black/40 to-black/10"></div>
@@ -346,16 +324,16 @@
 
             <div id="gallery-grid" class="gallery-marquee" role="region" aria-label="Gallery carousel">
                 <div class="gallery-track">
-                    <div class="gallery-slide-item"><img src="image/2.jpg" loading="lazy" decoding="async" alt="Woman in a pink and red patterned dress with a ruffled shoulder" /></div>
-                    <div class="gallery-slide-item"><img src="image/3.jpg" loading="lazy" decoding="async" alt="Woman in a short red sequined dress with sheer lace sleeves" /></div>
-                    <div class="gallery-slide-item"><img src="image/4.jpg" loading="lazy" decoding="async" alt="Woman in a cream corset-style gown with a sheer tulle train, holding dried flowers" /></div>
-                    <div class="gallery-slide-item"><img src="image/5.jpg" loading="lazy" decoding="async" alt="Smiling woman in an orange satin dress and a magenta head wrap" /></div>
-                    <div class="gallery-slide-item"><img src="image/6.jpg" loading="lazy" decoding="async" alt="Man in a white traditional outfit with an orange embroidered front panel" /></div>
-                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/2.jpg" loading="lazy" decoding="async" alt="" /></div>
-                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/3.jpg" loading="lazy" decoding="async" alt="" /></div>
-                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/4.jpg" loading="lazy" decoding="async" alt="" /></div>
-                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/5.jpg" loading="lazy" decoding="async" alt="" /></div>
-                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/6.jpg" loading="lazy" decoding="async" alt="" /></div>
+                    <div class="gallery-slide-item"><img src="image/2.jpg" width="1080" height="1347" loading="lazy" decoding="async" alt="Woman in a pink and red patterned dress with a ruffled shoulder" /></div>
+                    <div class="gallery-slide-item"><img src="image/3.jpg" width="1440" height="1797" loading="lazy" decoding="async" alt="Woman in a short red sequined dress with sheer lace sleeves" /></div>
+                    <div class="gallery-slide-item"><img src="image/4.jpg" width="1170" height="1559" loading="lazy" decoding="async" alt="Woman in a cream corset-style gown with a sheer tulle train, holding dried flowers" /></div>
+                    <div class="gallery-slide-item"><img src="image/5.jpg" width="1170" height="1460" loading="lazy" decoding="async" alt="Smiling woman in an orange satin dress and a magenta head wrap" /></div>
+                    <div class="gallery-slide-item"><img src="image/6.jpg" width="1440" height="1797" loading="lazy" decoding="async" alt="Man in a white traditional outfit with an orange embroidered front panel" /></div>
+                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/2.jpg" width="1080" height="1347" loading="lazy" decoding="async" alt="" /></div>
+                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/3.jpg" width="1440" height="1797" loading="lazy" decoding="async" alt="" /></div>
+                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/4.jpg" width="1170" height="1559" loading="lazy" decoding="async" alt="" /></div>
+                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/5.jpg" width="1170" height="1460" loading="lazy" decoding="async" alt="" /></div>
+                    <div class="gallery-slide-item" aria-hidden="true"><img src="image/6.jpg" width="1440" height="1797" loading="lazy" decoding="async" alt="" /></div>
                 </div>
             </div>
 
@@ -375,7 +353,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
                 <div class="sm:col-span-2 lg:col-span-1">
                     <a href="#" aria-label="REMAGSTYLE home" class="inline-flex items-center">
-                        <img src="image/Logo.png" alt="REMAGSTYLE" width="1024" height="1024" loading="lazy" decoding="async" class="h-28 w-28 object-contain" />
+                        <img src="image/Logo.png" alt="REMAGSTYLE" width="512" height="512" loading="lazy" decoding="async" class="h-28 w-28 object-contain" />
                     </a>
                     <p class="mt-4 max-w-xs text-sm leading-6 text-gray-400">
                         Bespoke African fashion and modern couture, crafted in Accra for stories worth wearing.
