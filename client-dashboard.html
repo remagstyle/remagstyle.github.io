@@ -220,8 +220,8 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const paymentWorkerUrl = 'https://remagstyle-paystack-worker.1realstranger.workers.dev';
-        const mediaWorkerUrl = 'https://remagstyle-media-worker.1realstranger.workers.dev';
+        const paymentWorkerUrl = 'https://api.remag.style';
+        const mediaWorkerUrl = 'https://media.remag.style';
         const PAID_WORDS = ['paid', 'success', 'successful', 'confirmed'];
         const orderForm = document.getElementById('order-form');
         const orderFormMessage = document.getElementById('order-form-message');
