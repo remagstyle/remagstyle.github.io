@@ -33,28 +33,6 @@
     <meta name="twitter:description" content="Book a bespoke fashion and custom tailoring appointment with RemagStyle in Accra, Ghana.">
     <meta name="twitter:image" content="https://remag.style/image/hero2.jpg">
     <meta name="twitter:image:alt" content="Woman in an orange sequined corset gown admiring a beaded red and pink garment on a tailor's mannequin">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            bg: '#F9F8F6',
-                            card: '#EFECE6',
-                            text: '#111111',
-                            muted: '#666666',
-                            border: '#E2DFD8'
-                        }
-                    },
-                    fontFamily: {
-                        serif: ['Cormorant Garamond', 'Georgia', 'serif'],
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -90,12 +68,13 @@
         function loadScript(a){var b=document.getElementsByTagName("head")[0],c=document.createElement("script");c.type="text/javascript",c.src="https://tracker.metricool.com/resources/be.js",c.onreadystatechange=a,c.onload=a,b.appendChild(c)}
         loadScript(function(){beTracker.t({hash:"d84d52199bf30a35cca0233e6cb5857c"})});
     </script>
+    <link rel="stylesheet" href="css/appointment.css">
 </head>
 <body class="site-theme min-h-screen bg-brand-bg text-brand-text">
     <header class="border-b border-brand-border/60 bg-brand-bg/95 backdrop-blur-md">
         <nav class="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8 lg:px-12">
             <a href="index.html" aria-label="REMAGSTYLE home" class="flex items-center">
-                <img src="image/Logo.png" alt="REMAGSTYLE" decoding="async" class="h-14 w-14 object-contain">
+                <img src="image/Logo.png" width="512" height="512" alt="REMAGSTYLE" decoding="async" class="h-14 w-14 object-contain">
             </a>
             <a href="index.html" class="text-[10px] font-medium uppercase tracking-[0.18em] transition-opacity hover:opacity-50">Back to site</a>
         </nav>
